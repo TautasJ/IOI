@@ -1,0 +1,129 @@
+/*input
+3 40
+10 1
+10 2
+10 3
+
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+struct Fenwick
+{
+	vector<ll>A;
+	ll n;
+	Fenwick(ll n = 1): n(n)
+	{
+		A = vector<ll>(n + 1, 0);
+	}
+	inline ll lsb(ll x)
+	{
+		return ((x) & (-x));
+	}
+	void add(ll i, ll w)
+	{
+		for (; i <= n; i += lsb(i))
+		{
+			A[i] += w;
+		}
+	}
+	ll get(ll i)
+	{
+		i = min(i, n);
+		ll ret = 0;
+		for (; i > 0; i -= lsb(i))
+		{
+			ret += A[i];
+		}
+		return ret;
+	}
+	ll get(ll a, ll b)
+	{
+		return get(b) - get(a - 1);
+	}
+};
+int main()
+{
+	ios_base::sync_with_stdio(false), cin.tie(0), cout.tie(0), cerr.tie(0);
+	ll N, W;
+	cin >> N >> W;
+	ll S[N];
+	ll Q[N];
+	for (ll i = 0; i < N; i++)
+		cin >> S[i] >> Q[i];
+	ll A[N];
+	for (ll i = 0; i < N; i++)
+		A[i] = i;
+	sort(A, A + N, [&](ll a, ll b) {return Q[a] * S[b] > Q[b] * S[a];});
+	ll B[N];
+	for (ll i = 0; i < N; i++)
+		B[i] = i;
+	sort(B, B + N, [&](ll a, ll b) {return Q[a] < Q[b];});
+	ll Kelllas[N];
+	for (ll i = 0; i < N; i++)
+		Kelllas[B[i]] = i + 1;
+	Fenwick X1(N + 1);
+	Fenwick X2(N + 1);
+
+	ll kiek = 0;
+	pair<pair<ll, ll>, ll>mini = {{W, 1}, -1};
+	for (ll i = 0; i < N; i++)
+	{
+		X1.add(Kelllas[A[i]], 1);
+		X2.add(Kelllas[A[i]], Q[A[i]]);
+		while (true)
+		{
+			ll lo = 1;
+			ll hi = N + 1;
+			if (X1.get(hi) < kiek + 1)
+				break;
+			while (lo < hi)
+			{
+				ll m = (lo + hi) / 2;
+				if (X1.get(m) < kiek + 1)
+					lo = m + 1;
+				else
+					hi = m;
+			}
+			ll m = (lo + hi) / 2;
+			ll suma = X2.get(m);
+			if (suma * S[A[i]] <= W * Q[A[i]])
+			{
+				kiek++;
+				mini = {{suma*S[A[i]], Q[A[i]]}, i};
+			}
+			else
+				break;
+		}
+		ll lo = 1;
+		ll hi = N + 1;
+		while (lo < hi)
+		{
+			ll m = (lo + hi) / 2;
+			if (X1.get(m) < kiek)
+				lo = m + 1;
+			else
+				hi = m;
+		}
+		ll m = (lo + hi) / 2;
+		ll suma = X2.get(m);
+		if (suma * S[A[i]] <= W * Q[A[i]])
+		{
+			pair<ll, ll>X = {suma*S[A[i]], Q[A[i]]};
+			if (X.first * mini.first.second < mini.first.first * X.second)
+				mini = {{suma*S[A[i]], Q[A[i]]}, i};
+		}
+	}
+	ll i = mini.second;
+	set<pair<ll, ll>>XX;
+	for (ll a = 0; a <= i; a++)
+	{
+		XX.insert({Q[A[a]], A[a]});
+	}
+	while (XX.size() > kiek)
+		XX.erase(--XX.end());
+	cout << kiek << '\n';
+	for (auto i : XX)
+		cout << i.second + 1 << "\n";
+}
