@@ -1,0 +1,110 @@
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+struct DSU
+{
+	vector<int>pa;
+	DSU(int N)
+	{
+		pa = vector<int>(N);
+		for (int i = 0; i < N; i++)
+			pa[i] = i;
+	}
+	int root(int i)
+	{
+		if (i == pa[i])
+			return i;
+		return pa[i] = root(pa[i]);
+	}
+	void merge(int a, int b)
+	{
+		pa[root(a)] = root(b);
+	}
+};
+int travelTime(int N, int M, int L, int A[], int B[], int T[])
+{
+	DSU X(N);
+	vector<pair<int, int>>adj[N];
+	for (int i = 0; i < M; i++)
+	{
+		X.merge(A[i], B[i]);
+		adj[A[i]].push_back({T[i], B[i]});
+		adj[B[i]].push_back({T[i], A[i]});
+	}
+	function<pair<int, int>(int, int, pair<int, pair<int, int>>&)>diameter;
+	diameter = [&](int i, int p, pair<int, pair<int, int>> &d)
+	{
+		pair<int, int>H = {0, i};
+		for (pair<int, int>j : adj[i])
+		{
+			if (j.second == p)
+				continue;
+			pair<int, int>a = diameter(j.second, i, d);
+			pair<int, pair<int, int>>gal;
+			a.first += j.first;
+			gal.first = a.first + H.first;
+			gal.second = {H.second, a.second};
+			d = max(d, gal);
+			H = max(H, a);
+		}
+		pair<int, pair<int, int>>gal;
+		gal.first = H.first;
+		gal.second = {H.second, i};
+		d = max(d, gal);
+		return H;
+	};
+	int Da[N];
+	int Db[N];
+	fill_n(Da, N, 1500000000);
+	fill_n(Db, N, 1500000000);
+	function<void(int, int*, vector<int>&)>pildyk;
+	pildyk = [&](int a, int d[], vector<int>&x)->void
+	{
+		x.push_back(a);
+		for (pair<int, int>b : adj[a])
+		{
+			if (d[b.second] > d[a] + b.first)
+			{
+				d[b.second] = d[a] + b.first;
+				pildyk(b.second, d, x);
+			}
+		}
+	};
+	int ans = 0;
+	vector<int>x;
+	for (int i = 0; i < N; i++)
+	{
+		if (X.root(i) == i)
+		{
+			pair<int, pair<int, int>>d = {0, {i, i}};
+			diameter(i, i, d);
+			int a = d.second.first;
+			int b = d.second.second;
+			ans = max(ans, d.first);
+			vector<int>visi;
+			Da[a] = 0;
+			Db[b] = 0;
+			pildyk(a, Da, visi);
+			pildyk(b, Db, visi);
+			int kiek = 1500000000;
+			for (int j : visi)
+			{
+				if (Da[j] + Db[j] == Da[b])
+				{
+					kiek = min(kiek, max(Da[j], Db[j]));
+				}
+			}
+			x.push_back(kiek);
+		}
+	}
+	sort(x.begin(), x.end(), greater<int>());
+	if (x.size() >= 2)
+		ans = max(ans, x[0] + x[1] + L);
+	if (x.size() >= 3)
+		ans = max(ans, x[1] + x[2] + 2 * L);
+	return ans;
+}/*
+int main()
+{
+
+}/**/
