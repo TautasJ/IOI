@@ -1,0 +1,52 @@
+/***
+10
+***/
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+int sz[1500][1500];
+int c[1500];
+int N;
+void initialize(int n)
+{
+	N = n;
+	for (int i = 0; i < n; i++)
+	{
+		c[i] = i;
+		for (int j = 0; j < n; j++)
+			sz[i][j] = 1;
+	}
+}
+
+int hasEdge(int u, int v)
+{
+	u = c[u];
+	v = c[v];
+	if (u == v)
+		return 1;
+	sz[u][v]--;
+	sz[v][u]--;
+	if (sz[u][v] == 0)
+	{
+		for (int i = 0; i < N; i++)
+		{
+			if (c[i] == v)
+				c[i] = u;
+		}
+		for (int k = 0; k < N; k++)
+		{
+			sz[u][k] += sz[v][k];
+			sz[k][u] += sz[k][v];
+		}
+		return 1;
+	}
+	return 0;
+}/*
+int main()
+{
+	int n;
+	cin >> n;
+	initialize(n);
+	cout << hasEdge(0, 1) << endl;
+	cout << hasEdge(3, 0) << endl;
+}*/
