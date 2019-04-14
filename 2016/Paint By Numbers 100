@@ -1,0 +1,169 @@
+/*input
+
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+string solve_puzzle(string s, vector<int> c)
+{
+	int n = s.size();
+	int k = c.size();
+	bool ok[n][k];
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < k; j++)
+			ok[i][j] = false;
+	int sumX[n + 1];
+	int sumB[n + 1];
+	sumX[0] = 0;
+	sumB[0] = 0;
+	for (int i = 0; i < n; i++)
+	{
+		sumX[i + 1] = (s[i] == 'X');
+		if (i != 0)
+			sumX[i + 1] += sumX[i];
+
+		sumB[i + 1] = (s[i] == '_');
+		if (i != 0)
+			sumB[i + 1] += sumB[i];
+	}
+	int maxi[n + 1][k];
+	for (int i = 0; i <= n; i++)
+		for (int j = 0; j < k; j++)
+			maxi[i][j] = -1;
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < k; j++)
+		{
+			if (i != 0)
+				maxi[i][j] = maxi[i - 1][j];
+			if (i + 1 < c[j])
+				continue;
+			int kiekb = sumB[i + 1] - sumB[i - c[j] + 1];
+			if (kiekb > 0)
+				continue;
+			if (j == 0)
+			{
+				if (sumX[i - c[j] + 1] == 0)
+				{
+					ok[i][j] = true;
+					maxi[i][j] = i;
+				}
+				continue;
+			}
+			if (i == c[j])
+				continue;
+			if (i - c[j] - 1 >= 0)
+			{
+				int a = maxi[i - c[j] - 1][j - 1];
+				if (a != -1)
+				{
+					int kiekx = sumX[i - c[j] + 1] - sumX[a + 1];
+					if (kiekx > 0)
+						continue;
+					ok[i][j] |= ok[a][j - 1];
+				}
+			}
+
+			if (ok[i][j])
+			{
+				maxi[i][j] = i;
+			}
+		}
+	}
+	bool ok2[n][k];
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < k; j++)
+			ok2[i][j] = false;
+	int KiekX[n + 1];
+	int KiekB[n + 1];
+	fill_n(KiekX, n + 1, 0);
+	fill_n(KiekB, n + 1, 0);
+	queue<pair<int, int>>Q;
+	for (int i = n - 1; i >= 0; i--)
+	{
+		if (ok[i][k - 1])
+		{
+			ok2[i][k - 1] = true;
+			KiekB[i + 1]++;
+		}
+		if (s[i] == 'X')
+			break;
+	}
+	bool galima[n + 1][k];
+	for (int i = 0; i <= n; i++)
+		for (int j = 0; j < k; j++)
+			galima[i][j] = false;
+	for (int j = k - 1; j >= 0; j--)
+	{
+		int kur = n;
+		for (int i = n - 1; i >= 0; i--)
+		{
+			if (galima[i][j] && s[i] != 'X')
+			{
+				if (i - 1 >= 0)
+				{
+					galima[i - 1][j] = true;
+				}
+			}
+			if (!galima[i][j])
+				kur = i;
+
+			if (!(ok2[i][j] || (ok[i][j] && galima[i][j])))
+				continue;
+			if (galima[i][j])
+			{
+				KiekB[i + 1]++;
+				KiekB[kur + 1]--;
+			}
+			KiekX[i - c[j] + 1]++;
+			KiekX[i + 1]--;
+			if (j == 0)
+			{
+				KiekB[0]++;
+				KiekB[i - c[j] + 1]--;
+			}
+			else
+			{
+				if (i - c[j] >= 0 && s[i - c[j]] != 'X')
+				{
+					galima[i - c[j] - 1][j - 1] = true;
+				}
+			}
+		}
+	}
+
+	string ret = s;
+	for (int i = 0; i < n; i++)
+	{
+		if (i != 0)
+		{
+			KiekX[i] += KiekX[i - 1];
+			KiekB[i] += KiekB[i - 1];
+		}
+		if (KiekX[i] && KiekB[i])
+		{
+			ret[i] = '?';
+		}
+		else if (KiekX[i])
+		{
+			ret[i] = 'X';
+		}
+		else
+		{
+			ret[i] = '_';
+		}
+	}
+	return ret;
+}/*
+int main()
+{
+	cout << solve_puzzle("..........", {3, 4}) << endl;
+	// ??X???XX??
+	cout << solve_puzzle("........", {3, 4}) << endl;
+	// XXX_XXXX
+	cout << solve_puzzle("..._._....", {3}) << endl;
+	// ???___????
+	cout << solve_puzzle(".X........", {3}) << endl;
+	//?XX?______
+}/**/
