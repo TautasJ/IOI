@@ -1,0 +1,82 @@
+/*input
+3
+print
+the
+poem
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+int main()
+{
+	ios_base::sync_with_stdio(false), cin.tie(0), cout.tie(0), cerr.tie(0);
+	int n;
+	cin >> n;
+	string s[n];
+	string ilgiaus = "";
+	for (int i = 0; i < n; i++)
+	{
+		cin >> s[i];
+		if (s[i].size() >= ilgiaus.size())
+			ilgiaus = s[i];
+	}
+	for (int t = ilgiaus.size() - 1; t >= 0; t--)
+	{
+		vector<string>x[27];
+		for (int i = 0; i < n; i++)
+		{
+			if (t >= s[i].size())
+				x[0].push_back(s[i]);
+			else
+				x[s[i][t] - 'a' + 1].push_back(s[i]);
+		}
+		int i = 0;
+		for (int b = 0; b < 27; b++)
+		{
+			if (b != (ilgiaus[t] - 'a' + 1))
+			{
+				for (string a : x[b])
+				{
+					s[i] = a;
+					i++;
+				}
+			}
+		}
+		for (string a : x[ilgiaus[t] - 'a' + 1])
+		{
+			s[i] = a;
+			i++;
+		}
+	}
+
+
+	string X = "";
+	vector<char>ans;
+	for (string c : s)
+	{
+		int kiek = -1;
+		for (int i = 0; i <= max(c.size(), X.size()); i++)
+		{
+			if ((i >= c.size() || i >= X.size()) || c[i] != X[i])
+			{
+				kiek = i;
+				break;
+			}
+		}
+		while (X.size() > kiek)
+		{
+			ans.push_back('-');
+			X.pop_back();
+		}
+		for (int i = X.size(); i < c.size(); i++)
+		{
+			ans.push_back(c[i]);
+			X.push_back(c[i]);
+		}
+		ans.push_back('P');
+	}
+	cout << ans.size() << "\n";
+	for (char x : ans)
+		cout << x << "\n";
+}
