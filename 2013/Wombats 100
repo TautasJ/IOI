@@ -1,0 +1,141 @@
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+int H[5050][200];
+int V[5050][200];
+int R;
+int C;
+int DD[5050][200];
+int opt[200][200];
+struct ST
+{
+	int l, r;
+	ST() {}
+	int D[200][200];
+	ST *left = NULL;
+	ST *right = NULL;
+	void merge()
+	{
+		for (int sz = C - 1; sz > (-C); sz--)
+		{
+			for (int i = 0; i < C; i++)
+			{
+				int j = i + sz;
+				if (j < 0 || j >= C)
+					continue;
+				int l = 0;
+				int r = C - 1;
+				if (i - 1 >= 0)
+					l = opt[i - 1][j];
+				if (j + 1 < C)
+					r = opt[i][j + 1];
+				D[i][j] = 2000000000;
+				opt[i][j] = 0;
+				for (int k = l; k <= r; k++)
+				{
+					int gal = left->D[i][k] + right->D[k][j] + V[left->r][k];
+					if (gal <= D[i][j])
+					{
+						D[i][j] = gal;
+						opt[i][j] = k;
+					}
+				}
+			}
+		}
+	}
+	void vienas()
+	{
+		for (int x = 0; x < C; x++)
+		{
+			for (int i = l; i <= r; i++)
+			{
+				for (int j = 0; j < C; j++)
+				{
+					DD[i][j] = 2000000000;
+				}
+			}
+			DD[l][x] = 0;
+			for (int i = l; i <= r; i++)
+			{
+				for (int j = C - 1; j >= 1; j--)
+				{
+					DD[i][j - 1] = min(DD[i][j - 1], DD[i][j] + H[i][j - 1]);
+				}
+				for (int j = 0; j + 1 < C; j++)
+				{
+					DD[i][j + 1] = min(DD[i][j + 1], DD[i][j] + H[i][j]);
+				}
+				for (int j = 0; j < C; j++)
+					DD[i + 1][j] = min(DD[i + 1][j], DD[i][j] + V[i][j]);
+			}
+			for (int j = 0; j < C; j++)
+				D[x][j] = DD[r][j];
+		}
+	}
+	ST(int l, int r): l(l), r(r)
+	{
+		if (r - l >= 100)
+		{
+			left = new ST(l, (l + r) / 2);
+			right = new ST((l + r) / 2 + 1, r);
+			merge();
+		}
+		else
+		{
+			vienas();
+		}
+	}
+	void remake(int p)
+	{
+		if (!(l <= p && p <= r))
+			return;
+		if (left)
+		{
+			left->remake(p);
+			right->remake(p);
+			merge();
+		}
+		else
+		{
+			vienas();
+		}
+	}
+} medis;
+void init(int r, int c, int h[5000][200], int v[5000][200])
+{
+	R = r;
+	C = c;
+	for (int i = 0; i < R; i++)
+		for (int j = 0; j < C - 1; j++)
+			H[i][j] = h[i][j];
+	for (int i = 0; i < R - 1; i++)
+		for (int j = 0; j < C; j++)
+			V[i][j] = v[i][j];
+	medis = ST(0, R - 1);
+}
+void changeH(int P, int Q, int W)
+{
+	H[P][Q] = W;
+	medis.remake(P);
+}
+void changeV(int P, int Q, int W)
+{
+	V[P][Q] = W;
+	medis.remake(P);
+}
+int escape(int V1, int V2)
+{
+	return medis.D[V1][V2];
+}
+/*
+int a1[5000][200] = {{0, 2, 5}, {7, 1, 1}, {0, 4, 0}};
+int a2[5000][200] = {{0, 0, 0, 2}, {0, 3, 4, 7}};
+int main()
+{
+	init(3, 4, a1, a2);
+	cout << escape(2, 1) << endl;
+	cout << escape(3, 3) << endl;
+	changeV(0, 0, 5);
+	changeH(1, 1, 6);
+	cout << escape(2, 1) << endl;
+}/**/
