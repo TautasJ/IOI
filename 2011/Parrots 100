@@ -1,0 +1,220 @@
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+const int base = 256 * 256 * 256;
+const int dydis = 22;
+struct skaicius
+{
+	int A[dydis];
+	skaicius()
+	{
+		fill_n(A, dydis, 0);
+	}
+	skaicius(int M[], int N)
+	{
+		fill_n(A, dydis, 0);
+		for (int i = 0; i < N; i++)
+		{
+			if (i % 3 == 0)
+				A[i / 3] += M[i];
+			if (i % 3 == 1)
+				A[i / 3] += M[i] * 256;
+			if (i % 3 == 2)
+				A[i / 3] += M[i] * 256 * 256;
+		}
+	}
+	skaicius(int X)
+	{
+		fill_n(A, dydis, 0);
+		A[0] = X;
+	}
+};
+skaicius operator+(const skaicius &a, const skaicius &b)
+{
+	skaicius c;
+	for (int i = 0; i < dydis; i++)
+	{
+		c.A[i] += a.A[i] + b.A[i];
+		int k = c.A[i] / base;
+		if (i + 1 < dydis)
+		{
+			c.A[i + 1] += k;
+			c.A[i] -= k * base;
+		}
+	}
+	return c;
+}
+skaicius operator-(const skaicius &a, const skaicius &b)
+{
+	skaicius c;
+	for (int i = 0; i < dydis; i++)
+	{
+		c.A[i] += a.A[i] - b.A[i];
+		if (c.A[i] >= base)
+		{
+			int k = c.A[i] / base;
+			c.A[i + 1] += k;
+			c.A[i] -= k * base;
+		}
+		else if (c.A[i] < 0)
+		{
+			int k = (-c.A[i] - 1) / base + 1;
+			c.A[i] += k * base;
+			c.A[i + 1] -= k;
+		}
+	}
+	return c;
+}
+bool operator <= (const skaicius &a, const skaicius &b)
+{
+	for (int i = dydis - 1; i >= 0; i--)
+		if (a.A[i] != b.A[i])
+			return a.A[i] <= b.A[i];
+	return true;
+}
+bool operator >= (const skaicius &a, const skaicius &b)
+{
+	return (b <= a);
+}
+skaicius DP[270][256];
+bool pirmas2 = true;
+void encode(int N, int M[])
+{
+	int K = min(5 * N, 269);
+	if (N < 16)
+		K = 10 * N;
+	skaicius x(M, N);
+	x = x + skaicius(1);
+	skaicius suma;
+	if (pirmas2)
+	{
+		for (int n = 1; n < 270; n++)
+		{
+			for (int r = 0; r < 256; r++)
+			{
+				if (n == 1)
+				{
+					DP[n][r] = skaicius(r + 1);
+				}
+				else
+				{
+					for (int x = 0; x <= r; x++)
+					{
+						DP[n][r] = DP[n][r] + DP[n - 1][x];
+					}
+				}
+			}
+		}
+		pirmas2 = false;
+	}
+	skaicius y;
+	int mx = 0;
+	for (int i = K; i >= 1; i--)
+	{
+		if (i == K)
+		{
+			int pirmas;
+			for (int c = 255; c >= 0; c--)
+			{
+				if (DP[i][c] >= x)
+				{
+					pirmas = c;
+				}
+			}
+			int c = pirmas;
+			send(c);
+			mx = c;
+			y = DP[i][c];
+			continue;
+		}
+		int kitas;
+		int lo = 0;
+		int hi = mx;
+		while (lo < hi)
+		{
+			int c = (lo + hi) / 2;
+			if ((y + DP[i][c]) - DP[i][mx] >= x)
+				hi = c;
+			else
+				lo = c + 1;
+		}
+		int c = (lo + hi) / 2;
+		send(c);
+		y = (y + DP[i][c]) - DP[i][mx];
+		mx = c;
+	}
+}
+skaicius DP1[270][256];
+bool pirmas1 = true;
+void decode(int N, int L, int X[])
+{
+	int K = min(5 * N, 269);
+	if (N < 16)
+		K = 10 * N;
+	if (pirmas1)
+	{
+		for (int n = 1; n < 270; n++)
+		{
+			for (int r = 0; r < 256; r++)
+			{
+				if (n == 1)
+				{
+					DP1[n][r] = skaicius(r + 1);
+				}
+				else
+				{
+					for (int x = 0; x <= r; x++)
+					{
+						DP1[n][r] = DP1[n][r] + DP1[n - 1][x];
+					}
+				}
+			}
+		}
+		pirmas1 = false;
+	}
+	sort(X, X + L, greater<int>());
+	int mx = X[0];
+	skaicius A = DP1[L][mx];
+	for (int i = 1; i < L; i++)
+	{
+		int c = X[i];
+		int kiek = L - i;
+		A = (A + DP1[kiek][c]) - DP1[kiek][mx];
+		mx = c;
+	}
+	A = A - skaicius(1);
+	for (int i = 0; i < N; i++)
+	{
+		output(A.A[i / 3] % 256);
+		A.A[i / 3] /= 256;
+	}
+}
+/*
+int main()
+{
+	srand(clock());
+	clock_t pradzia = clock();
+	for (int t = 0; t < 50; t++)
+	{
+		kiekis = 0;
+		kiekis1 = 0;
+		int N = 64;
+		int M[N];
+		for (int i = 0; i < N; i++)
+		{
+			M[i] = rand() % 256;
+			cout << M[i] << " ";
+		}
+		cout << endl;
+		encode(N, M);
+		cout << endl;
+		cout << kiekis << " kartu\n";
+		random_shuffle(masyvas, masyvas + kiekis);
+		decode(N, kiekis, masyvas);
+		cout << endl;
+		for (int i = 0; i < N; i++)
+			assert(masyvas1[i] == M[i]);
+	}
+	cout << double(clock() - pradzia) / CLOCKS_PER_SEC << endl;
+}/**/
