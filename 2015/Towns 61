@@ -1,0 +1,289 @@
+/*input
+11
+0 17 18 20 17 12 20 16 23 20 11
+17 0 23 25 22 17 25 21 28 25 16
+18 23 0 12 21 16 24 20 27 24 17
+20 25 12 0 23 18 26 22 29 26 19
+17 22 21 23 0 9 21 17 26 23 16
+12 17 16 18 9 0 16 12 21 18 11
+20 25 24 26 21 16 0 10 29 26 19
+16 21 20 22 17 12 10 0 25 22 15
+23 28 27 29 26 21 29 25 0 21 22
+20 25 24 26 23 18 26 22 21 0 19
+11 16 17 19 16 11 19 15 22 19 0
+*/
+#include "towns.h"
+#include <bits/stdc++.h>
+using namespace std;
+struct DSU
+{
+	vector<int>pa;
+	DSU(int n = 1)
+	{
+		n += 30;
+		pa = vector<int>(n, -1);
+	}
+	int root(int i)
+	{
+		if (pa[i] < 0)
+			return i;
+		return pa[i] = root(pa[i]);
+	}
+	int size(int i)
+	{
+		return -pa[root(i)];
+	}
+	bool same(int a, int b)
+	{
+		return (root(a) == root(b));
+	}
+	int merge(int a, int b)
+	{
+		a = root(a);
+		b = root(b);
+		if (a == b)
+			return a;
+		if (pa[a] < pa[b])
+			swap(a, b);
+		pa[b] += pa[a];
+		pa[a] = b;
+		return b;
+	}
+};
+int queries;
+map<pair<int, int>, int>DISTT;
+int d(int a, int b)
+{
+	if (a > b)
+		swap(a, b);
+	if (a == b)
+		return 0;
+	if (DISTT.count(make_pair(a, b)))
+		return DISTT[make_pair(a, b)];
+	queries--;
+	if (queries == -1)
+		exit(-2);
+	return DISTT[make_pair(a, b)] = getDistance(a, b);
+}
+int hubDistance(int N, int sub)
+{
+	srand(N + 156 + sub);
+	if (sub == 5)
+		queries = 5 * N;
+	else if (sub == 6 || sub == 4 || sub == 2)
+		queries = 7 * N - (7 * N) / 2;
+	else
+		queries = N * (N - 1) - (N * (N - 1)) / 2;
+	DISTT.clear();
+	int prad = rand() % N;
+	int x = prad;
+	pair<int, int>y = { -1, -1};
+	for (int i = 0; i < N; i++)
+		y = max(y, {d(x, i), i});
+
+	x = y.second;
+	y = { -1, -1};
+	for (int i = 0; i < N; i++)
+		y = max(y, {d(x, i), i});
+
+	int a = x;
+	int b = y.second;
+	int R = d(a, b);
+	vector<int>G[4];
+	int d0 = (d(a, prad) + d(b, prad) - d(a, b)) / 2;
+	int a0_ = d(a, prad) - d0;
+	for (int x = 0; x < N; x++)
+	{
+		int D = (d(a, x) + d(x, prad) - d(a, prad)) / 2;
+		int ax_ = d(a, x) - D;
+		if (ax_ <= a0_)
+		{
+			R = min(R, max({D, ax_, d(a, b) - ax_}));
+		}
+	}
+	if (sub <= 2)
+		return R;
+	for (int x = 0; x < N; x++)
+	{
+		int D = (d(a, x) + d(x, prad) - d(a, prad)) / 2;
+		int ax_ = d(a, x) - D;
+		if (ax_ < a0_)
+		{
+			if (max(ax_, d(a, b) - ax_) == R)
+			{
+				if (ax_ <= d(a, b) - ax_)
+				{
+					G[1].push_back(x);
+				}
+				else
+					G[2].push_back(x);
+			}
+			else
+			{
+				if (ax_ <= d(a, b) - ax_)
+				{
+					G[0].push_back(x);
+				}
+				else
+					G[3].push_back(x);
+			}
+		}
+		else
+		{
+			if (a0_ != R)
+			{
+				G[3].push_back(x);
+				continue;
+			}
+			int cx = (d(a, x) + d(x, b) - d(a, b)) / 2;
+			if (max(d(a, x), d(b, x)) - cx == R)
+			{
+				if (d(a, x) <= d(b, x))
+				{
+					G[1].push_back(x);
+				}
+				else
+					G[2].push_back(x);
+			}
+			else
+			{
+				if (d(a, x) <= d(b, x))
+				{
+					G[0].push_back(x);
+				}
+				else
+					G[3].push_back(x);
+			}
+		}
+	}
+	DSU XXX(N);
+	set<int>nesame[N];
+	auto same = [&](int x, int y)->bool
+	{
+		x = XXX.root(x);
+		y = XXX.root(y);
+		if (nesame[x].count(y) || nesame[y].count(x))
+		{
+			return false;
+		}
+		int cx = (d(a, x) + d(x, b) - d(a, b)) / 2;
+		int cy = (d(a, y) + d(y, b) - d(a, b)) / 2;
+		if ((d(x, y) < cx + cy))
+		{
+			set<int> & s1 = nesame[x];
+			set<int> & s2 = nesame[y];
+			XXX.merge(x, y);
+			int z = XXX.root(x);
+			for (int i : s1)
+			{
+				int j = XXX.root(i);
+				nesame[z].insert(j);
+				nesame[j].insert(z);
+			}
+			for (int i : s2)
+			{
+				int j = XXX.root(i);
+				nesame[z].insert(j);
+				nesame[j].insert(z);
+			}
+			return true;
+		}
+		else
+		{
+			nesame[x].insert(y);
+			nesame[y].insert(x);
+			return false;
+		}
+	};
+	if (G[0].size() > N / 2 || G[3].size() > N / 2)
+		return -R;
+	function<vector<int>(vector<int>)> ieskok = [&](vector<int>a)->vector<int>
+	{
+		if (a.size() == 0)
+			return {};
+		if (a.size() == 1)
+			return a;
+		vector<int>c1;
+		vector<int>c2;
+		for (int i = 0; i < a.size(); i++)
+		{
+			if (i < (a.size() / 2))
+				c1.push_back(a[i]);
+			else
+				c2.push_back(a[i]);
+		}
+		vector<int>d1 = ieskok(c1);
+		vector<int>d2 = ieskok(c2);
+		if (d1.empty() && d2.empty())
+			return {};
+		if (d1.size() > 0 && d2.size() > 0)
+		{
+			vector<int>ret = d1;
+			for (int j : d2)
+				if (same(ret[0], j))
+				{
+					ret.push_back(j);
+				}
+			if (ret.size() > a.size() / 2)
+				return ret;
+		}
+		if (d1.size() > 0)
+		{
+			vector<int>ret = d1;
+			for (int j : c2)
+				if (same(ret[0], j))
+				{
+					ret.push_back(j);
+				}
+			if (ret.size() > a.size() / 2)
+				return ret;
+		}
+		if (d2.size() > 0)
+		{
+			vector<int>ret = d2;
+			for (int j : c1)
+				if (same(ret[0], j))
+				{
+					ret.push_back(j);
+				}
+			if (ret.size() > a.size() / 2)
+				return ret;
+		}
+		return {};
+	};
+	for (int t : {1, 2})
+	{
+		if (t == 1 && G[2].size() + G[3].size() > N / 2)
+			continue;
+		if (t == 2 && G[0].size() + G[1].size() > N / 2)
+			continue;
+		if (sub == 4)
+		{
+			if (G[t].size() <= N / 2)
+				return R;
+			else
+				continue;
+		}
+		if (ieskok(G[t]).size() <= N / 2)
+			return R;
+	}
+	return -R;
+}/*
+int main()
+{
+	int n;
+	while (cin >> n)
+	{
+		for (int i = 0; i < n; i++)
+		{
+			for (int j = 0; j < n; j++)
+			{
+				int w;
+				cin >> w;
+				DISTT[make_pair(i, j)] = w;
+				DISTT[make_pair(j, i)] = w;
+			}
+		}
+		cout << hubDistance(n, 6) << "\n";
+	}
+}/**/
