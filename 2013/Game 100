@@ -1,0 +1,178 @@
+/*input
+
+*/
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+ll GCD(ll a, ll b)
+{
+	if (a == 0)
+		return b;
+	if (b == 0)
+		return a;
+	return __gcd(a, b);
+}
+struct node
+{
+	int w;
+	ll G;
+	ll GM;
+	int i;
+	node *l = NULL, *r = NULL;
+	node(int i, ll G): i(i), G(G)
+	{
+		w = rand();
+		GM = G;
+	}
+};
+using pnode = node*;
+ll val(pnode x)
+{
+	if (x)
+		return x->GM;
+	return 0;
+}
+pnode merge(pnode a, pnode b)
+{
+	if (a == NULL)
+		return b;
+	if (b == NULL)
+		return a;
+	if (a->w < b->w)
+	{
+		a->r = merge(a->r, b);
+		a->GM = GCD(a->G, GCD(val(a->l), val(a->r)));
+		return a;
+	}
+	else
+	{
+		b->l = merge(a, b->l);
+		b->GM = GCD(b->G, GCD(val(b->l), val(b->r)));
+		return b;
+	}
+}
+void split(pnode a, pnode &x, pnode &y, int uz)
+{	//i < uz
+	if (a == NULL)
+	{
+		x = NULL;
+		y = NULL;
+		return;
+	}
+	if (a->i >= uz)
+	{
+		split(a->l, x, y, uz);
+		a->l = y;
+		a->GM = GCD(a->G, GCD(val(a->l), val(a->r)));
+		y = a;
+	}
+	else
+	{
+		split(a->r, x, y, uz);
+		a->r = x;
+		a->GM = GCD(a->G, GCD(val(a->l), val(a->r)));
+		x = a;
+	}
+}
+
+int rows;
+int cols;
+struct ST2
+{
+	int l, r;
+	ST2 *left = NULL, *right = NULL;
+	pnode G = NULL;
+	unordered_map<int, pnode>GG;
+	ST2(int l, int r): l(l), r(r)
+	{
+
+	}
+	void update(int i, int j, ll g)
+	{
+		if (l <= i && i <= r)
+		{
+			if (GG.count(j) == 0)
+			{
+				GG[j] = NULL;
+			}
+			pnode x, y, z;
+			split(GG[j], x, z, i);
+			split(z, y, z, i + 1);
+			GG[j] = merge(x, merge(new node(i, g), z));
+
+			split(G, x, z, j);
+			split(z, y, z, j + 1);
+			G = merge(x, merge(new node(j, val(GG[j])), z));
+
+			if (l < r)
+			{
+				int mid = (l + r) / 2;
+				if (i <= mid)
+				{
+					if (left == NULL)
+						left = new ST2(l, mid);
+					left->update(i, j, g);
+				}
+				else
+				{
+					if (right == NULL)
+						right = new ST2(mid + 1, r);
+					right->update(i, j, g);
+				}
+			}
+		}
+	}
+	ll query(int x1, int x2, int y1, int y2)
+	{
+		if (x1 <= l && r <= x2)
+		{
+			pnode x, y, z;
+			split(G, x, z, y1);
+			split(z, y, z, y2 + 1);
+			ll ans = val(y);
+			G = merge(x, merge(y, z));
+			return ans;
+		}
+		if (x2 < l || r < x1)
+			return 0;
+		ll ret = 0;
+		if (left)
+			ret = GCD(ret, left->query(x1, x2, y1, y2));
+		if (right)
+			ret = GCD(ret, right->query(x1, x2, y1, y2));
+		return ret;
+	}
+};
+ST2 X(0, 0);
+void init(int R, int C)
+{
+	rows = R;
+	cols = C;
+	X = ST2(0, R - 1);
+}
+void update(int P, int Q, ll K)
+{
+	X.update(P, Q, K);
+}
+ll calculate(int x1, int y1, int x2, int y2)
+{
+	return X.query(x1, x2, y1, y2);
+}/*
+int main()
+{
+	init(1000, 1000);
+	update(1, 0, 0);
+	cout << calculate(0, 0, 100, 100) << endl;
+	update(2, 0, 8);
+	cout << calculate(0, 0, 100, 100) << endl;
+	update(3, 0, 4);
+	cout << calculate(0, 0, 100, 100) << endl;
+	update(4, 0, 2);
+	cout << calculate(0, 0, 100, 100) << endl;
+	update(5, 0, 6);
+	cout << calculate(0, 0, 100, 100) << endl;
+	update(6, 0, 1);
+	cout << calculate(0, 0, 100, 100) << endl;
+}/**/
