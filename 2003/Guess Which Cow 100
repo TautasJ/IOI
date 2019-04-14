@@ -1,0 +1,76 @@
+/*input
+4 2
+X Z
+X Y
+Y X
+Y Y
+1
+1
+1
+1
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+int N, P;
+char A[50][8];
+ll split(ll code, int i, char c)
+{
+	ll ret = 0;
+	for (int j = 0; j < N; j++)
+	{
+		if ((code & (1ll << j)) > 0 && A[j][i] == c)
+			ret ^= (1ll << j);
+	}
+	return ret;
+}
+map<ll, pair<int, pair<int, char>>>M;
+pair<int, pair<int, char>> K(ll code)
+{
+	if (__builtin_popcountll(code) == 1)
+		return {0, {0, 0}};
+	auto it = M.find(code);
+	if (it != M.end())
+		return it->second;
+	pair<int, pair<int, char>> &ret = M[code];
+	ret = {1000, { -1, '-'}};
+	for (int i = 0; i < P; i++)
+	{
+		ll x = split(code, i, 'X');
+		ll y = split(code, i, 'Y');
+		ll z = (code ^ x ^ y);
+		if (x != 0 && x != code)
+			ret = min(ret, {1 + max(K(x).first, K(code ^ x).first), {i, 'X'}});
+		if (y != 0 && y != code)
+			ret = min(ret, {1 + max(K(y).first, K(code ^ y).first), {i, 'Y'}});
+		if (z != 0 && z != code)
+			ret = min(ret, {1 + max(K(z).first, K(code ^ z).first), {i, 'Z'}});
+	}
+	return ret;
+}
+int main()
+{
+	cin >> N >> P;
+	for (int i = 0; i < N; i++)
+	{
+		for (int j = 0; j < P; j++)
+			cin >> A[i][j];
+	}
+	ll code = (1ll << N) - 1;
+	while (__builtin_popcountll(code) != 1)
+	{
+		pair<int, char>x = K(code).second;
+		char c = x.second;
+		int i = x.first;
+		cout << "Q " << i + 1 << " " << c << endl;
+		ll c1 = split(code, i, c);
+		int ans;
+		cin >> ans;
+		if (ans == 1)
+			code = c1;
+		else
+			code ^= c1;
+	}
+	cout << "C " << __builtin_ctzll(code) + 1 << endl;
+	return 0;
+}
