@@ -1,0 +1,188 @@
+/*input
+11
+2 5
+2 6
+3 3
+3 6
+4 3
+4 4
+4 5
+4 6
+5 3
+5 4
+5 6
+*/
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+const ll modulo = 1000000000;
+set<ll>adj[100000];
+map<ll, ll>DP[100000];
+map<ll, ll>SZ[100000];
+struct node
+{
+	ll x;
+	ll y1;
+	ll y2;
+	node(ll x, ll y1, ll y2): x(x), y1(y1), y2(y2)
+	{
+
+	}
+};
+vector<node>A;
+ll dfs(ll i, ll p = -2151)
+{
+	ll ret = 0;
+	for (ll y = A[i].y1; y <= A[i].y2; y++)
+	{
+		SZ[i][y] = 0;
+		DP[i][y] = 0;
+	}
+	map<ll, ll>LSZ;
+	map<ll, ll>RSZ;
+	map<ll, ll>LDP;
+	map<ll, ll>RDP;
+	for (ll j : adj[i])
+	{
+		if (j == p)
+			continue;
+		ret += dfs(j, i);
+		ret %= modulo;
+		map<ll, ll>DP_;
+		map<ll, ll>SZ_;
+		for (ll y = A[j].y1; y <= A[j].y2; y++)
+		{
+			ll y_ = max(y, A[i].y1);
+			y_ = min(y_, A[i].y2);
+			SZ[i][y_] += SZ[j][y];
+			DP[i][y_] += DP[j][y] + (abs(y - y_) + 1) * SZ[j][y];
+			if (A[j].x < A[i].x)
+			{
+				LSZ[y_] += SZ[j][y];
+				LDP[y_] += DP[j][y] + (abs(y - y_) + 1) * SZ[j][y];
+			}
+			else
+			{
+				RSZ[y_] += SZ[j][y];
+				RDP[y_] += DP[j][y] + (abs(y - y_) + 1) * SZ[j][y];
+			}
+			SZ_[y_] += SZ[j][y];
+			DP_[y_] += DP[j][y] + (abs(y - y_) + 1) * SZ[j][y];
+		}
+		ll suma = 0;
+		ll kiekis = 0;
+		for (ll y = A[j].y1; y <= A[j].y2; y++)
+		{
+			suma += kiekis;
+			suma %= modulo;
+			kiekis %= modulo;
+			ret -= (suma) * SZ_[y];
+			ret -= (kiekis) * DP_[y];
+			ret %= modulo;
+			ret += modulo;
+			ret %= modulo;
+			suma += DP_[y];
+			kiekis += SZ_[y];
+		}
+	}
+
+	ll suma = 0;
+	ll kiekis = 0;
+	for (ll y = A[i].y1; y <= A[i].y2; y++)
+	{
+		suma += kiekis;
+		suma %= modulo;
+		kiekis %= modulo;
+		ret += (suma) * SZ[i][y];
+		ret += (kiekis) * DP[i][y];
+		ret %= modulo;
+		suma += DP[i][y];
+		kiekis += SZ[i][y];
+	}
+	for (ll y = A[i].y1; y <= A[i].y2; y++)
+	{
+		SZ[i][y]++;
+		DP[i][y] %= modulo;
+		ll a = y - A[i].y1;
+		ll b = A[i].y2 - y;
+		ll k = A[i].y2 - A[i].y1 + 1;
+		ll sum = (a * (a + 1) + b * (b + 1)) / 2;
+		ret -= a * (a + 1) / 2;
+		ret += k * DP[i][y];
+		ret += sum * SZ[i][y];
+		ret += (LDP[y]) * RSZ[y];
+		ret += (RDP[y]) * LSZ[y];
+		ret %= modulo;
+	}
+	return ret;
+}
+int DistanceSum(int N, int *X, int *Y)
+{
+	set<pair<ll, ll>>yra;
+	for (ll i = 0; i < N; i++)
+		yra.insert({X[i], Y[i]});
+	for (ll i = 0; i < N; i++)
+	{
+		if (yra.count({X[i], Y[i]}))
+		{
+			ll x = X[i];
+			ll y1 = Y[i];
+			ll y2 = y1;
+			while (yra.count({X[i], y1 - 1}))
+			{
+				y1--;
+				yra.erase({x, y1});
+			}
+			while (yra.count({X[i], y2 + 1}))
+			{
+				y2++;
+				yra.erase({x, y2});
+			}
+			A.push_back(node(x, y1, y2));
+		}
+	}
+	map<pair<ll, ll>, ll>val;
+	for (ll i = 0; i < A.size(); i++)
+	{
+		for (ll y = A[i].y1; y <= A[i].y2; y++)
+		{
+			ll x = A[i].x;
+			val[ {x, y}] = i;
+		}
+	}
+	for (ll i = 0; i < A.size(); i++)
+	{
+		for (ll y = A[i].y1; y <= A[i].y2; y++)
+		{
+			ll x = A[i].x;
+			if (val.count({x + 1, y}))
+				adj[i].insert(val[ {x + 1, y}]);
+			if (val.count({x - 1, y}))
+				adj[i].insert(val[ {x - 1, y}]);
+		}
+	}
+	ll ret = dfs(0);
+	for (ll i = 0; i < A.size(); i++)
+	{
+		adj[i].clear();
+		DP[i].clear();
+		SZ[i].clear();
+	}
+	A.clear();
+	ret %= modulo;
+	ret += modulo;
+	ret %= modulo;
+	return ret;
+}
+/*
+int main()
+{
+	srand(0);
+	int n;
+	cin >> n;
+	int x[n], y[n];
+	for (int i = 0; i < n; i++)
+		cin >> x[i] >> y[i];
+	cout << DistanceSum(n, x, y) << endl;
+}/**/
