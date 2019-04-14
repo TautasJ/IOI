@@ -1,0 +1,168 @@
+#include "grader.h"
+#include <bits/stdc++.h>
+#include <ext/pb_ds/assoc_container.hpp> // Common file
+#include <ext/pb_ds/tree_policy.hpp> // Including tree_order_statistics_node_update
+using namespace std;
+using namespace __gnu_pbds;
+template<typename A>
+using ordered_set = tree<A, null_type, less<A>, rb_tree_tag, tree_order_statistics_node_update>;
+typedef long long ll;
+struct ST
+{
+	int lazy = -1;
+	int val;
+	int l, r;
+	ST *left;
+	ST *right;
+	int suma = 0;
+	ST(int l, int r, int val): l(l), r(r), val(val)
+	{
+		if (l < r)
+		{
+			left = new ST(l, (l + r) / 2, val);
+			right = new ST((l + r) / 2 + 1, r, val);
+		}
+	}
+	void fix()
+	{
+		if (lazy != -1)
+		{
+			val = lazy;
+			if (l < r)
+			{
+				left->lazy = lazy;
+				right->lazy = lazy;
+			}
+			lazy = -1;
+		}
+	}
+	void set(int x, int y, int v)
+	{
+		if (x <= l && r <= y)
+		{
+			lazy = v;
+			return fix();
+		}
+		fix();
+		if (r < x || y < l)
+			return;
+		left->set(x, y, v);
+		right->set(x, y, v);
+	}
+	void fill(vector<int>&ans)
+	{
+		fix();
+		if (l < r)
+		{
+			left->fill(ans);
+			right->fill(ans);
+			return;
+		}
+		ans[l] = val;
+	}
+	void pridek(int i, int w)
+	{
+		if (l <= i && i <= r)
+		{
+			suma += w;
+			if (l < r)
+			{
+				left->pridek(i, w);
+				right->pridek(i, w);
+			}
+		}
+	}
+	int get(int x, int y)
+	{
+		fix();
+		if (x <= l && r <= y)
+		{
+			return suma;
+		}
+		fix();
+		if (r < x || y < l)
+			return 0;
+		return left->get(x, y) + right->get(x, y);
+	}
+};
+int GetBestPosition(int N, int C, int R, int *K, int *S, int *E)
+{
+	ordered_set<pair<int, int>>kur;
+	for (int i = 0; i < N; i++)
+	{
+		kur.insert({i, i});
+	}
+	for (int i = 0; i < C; i++)
+	{
+		auto a = kur.find_by_order(S[i]);
+		auto b = kur.find_by_order(E[i]);
+		S[i] = (*a).first;
+		E[i] = (*b).second;
+		for (auto it = kur.lower_bound({S[i], -100});
+		        it != kur.end() && (*it).second <= E[i];)
+		{
+			it = kur.erase(it);
+		}
+		kur.insert({S[i], E[i]});
+	}
+
+
+	ST medis(0, N - 1, C);
+	int SUMA[N];
+	fill_n(SUMA, N, 0);
+	for (int i = 0; i < N - 1; i++)
+	{
+		if (K[i] > R)
+			K[i] = 1;
+		else
+			K[i] = 0;
+		SUMA[i] = K[i];
+		if (i > 0)
+			SUMA[i] += SUMA[i - 1];
+	}
+	SUMA[N - 1] = SUMA[N - 2];
+	auto yra = [&](int l, int r)->int
+	{
+		int ans = SUMA[r];
+		if (l > 0)
+			ans -= SUMA[l - 1];
+		return ans;
+	};
+	vector<pair<int, int>>X[N + 1];
+	for (int i = C - 1; i >= 0; i--)
+	{
+		if (yra(S[i], E[i] - 1) > 0)
+		{
+			medis.set(S[i], E[i], i);
+		}
+		X[S[i]].push_back({i, 1});
+		X[E[i] + 1].push_back({i, -1});
+	}
+	vector<int>pralose(N);
+	medis.fill(pralose);
+	int ret = -1;
+	int kiek = -1;
+	for (int pos = 0; pos < N; pos++)
+	{
+		for (pair<int, int>i : X[pos])
+		{
+			medis.pridek(i.first, i.second);
+		}
+		int k = medis.get(0, pralose[pos] - 1);
+		if (k > kiek)
+		{
+			kiek = k;
+			ret = pos;
+		}
+	}
+	return ret;
+}
+/*
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	int K[] = {1, 0, 2, 4};
+	int S[] = {1, 0, 0};
+	int E[] = {3, 1, 1};
+	cout << GetBestPosition(5, 3, 3, K, S, E) << "\n";
+}/**/
