@@ -1,0 +1,82 @@
+/*input
+
+*/
+#include <bits/stdc++.h>
+#include "messy.h"
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+vector<int> restore_permutation(int n, int w, int r)
+{
+	function<void(int, int)>padaryk;
+	padaryk = [&](int l, int r)
+	{
+		if (l == r)
+			return;
+		string A(n, '1');
+		for (int i = l; i <= r; i++)
+			A[i] = '0';
+		for (int i = l; i <= (l + r) / 2; i++)
+		{
+			A[i] = '1';
+			add_element(A);
+			A[i] = '0';
+		}
+		padaryk(l, (l + r) / 2);
+		padaryk((l + r) / 2 + 1, r);
+	};
+	padaryk(0, n - 1);
+	compile_set();
+	vector<int>p(n);
+	function<void(set<int>, int, int)>surask;
+	surask = [&](set<int>x, int l, int r)
+	{
+		if (l == r)
+		{
+			p[*x.begin()] = l;
+			return;
+		}
+		string A(n, '1');
+		for (int i : x)
+			A[i] = '0';
+		set<int>kair;
+		set<int>desn;
+		for (int i : x)
+		{
+			A[i] = '1';
+			if (check_element(A))
+				kair.insert(i);
+			else
+				desn.insert(i);
+			A[i] = '0';
+		}
+		surask(kair, l, (l + r) / 2);
+		surask(desn, (l + r) / 2 + 1, r);
+	};
+	set<int>x;
+	for (int i = 0; i < n; i++)
+		x.insert(i);
+	surask(x, 0, n - 1);
+	return p;
+}
+/*
+int main()
+{
+	for (int i : restore_permutation(4, 16, 16))
+		cout << i << endl;
+}
+
+void compile_set()
+{
+
+}
+set<string>G;
+void add_element(string x)
+{
+	G.insert(x);
+}
+bool check_element(string x)
+{
+	return G.count(x);
+}
+/**/
