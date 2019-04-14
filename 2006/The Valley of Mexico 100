@@ -1,0 +1,103 @@
+/*input
+7
+9
+1 4
+5 1
+1 7
+5 6
+2 3
+3 4
+2 6
+4 6
+6 7
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+int c, n;
+#define mod(x) (((x)%c+c)%c)
+int yra[1000][1000];
+set<int>adj[1000];
+int make1(int i, int j);
+int make2(int i, int j);
+int D1[1000][1000];
+int D2[1000][1000];
+bool DP1(int i, int j);
+bool DP2(int i, int j)
+{
+	if (D2[i][j] != -1)
+		return D2[i][j];
+	if (i == j)
+		return true;
+	return D2[i][j] =
+	           (yra[j][mod(j + 1)] && DP2(i, mod(j + 1))) ||
+	           (yra[j][mod(i - 1)] && DP1(mod(i - 1), j));
+}
+bool DP1(int i, int j)
+{
+	if (D1[i][j] != -1)
+		return D1[i][j];
+	if (i == j)
+		return true;
+	return D1[i][j] =
+	           (yra[i][mod(j + 1)] && DP2(i, mod(j + 1))) ||
+	           (yra[i][mod(i - 1)] && DP1(mod(i - 1), j));
+}
+void print(int i)
+{
+	if (i == 0)
+		i = c;
+	cout << i << endl;
+}
+int make1(int i, int j)
+{
+	if (i == j)
+		return 0;
+	print(i);
+	if (yra[i][mod(j + 1)] && DP2(i, mod(j + 1)))
+		return make2(i, mod(j + 1));
+	if (yra[i][mod(i - 1)] && DP1(mod(i - 1), j))
+		return make1(mod(i - 1), j);
+}
+int make2(int i, int j)
+{
+	if (i == j)
+		return 0;
+	print(j);
+	if (yra[j][mod(j + 1)] && DP2(i, mod(j + 1)))
+		return make2(i, mod(j + 1));
+	if (yra[j][mod(i - 1)] && DP1(mod(i - 1), j))
+		return make1(mod(i - 1), j);
+}
+int main()
+{
+	cin >> c >> n;
+	for (int i = 0; i < c; i++)
+		for (int j = 0; j < c; j++)
+		{
+			D1[i][j] = -1;
+			D2[i][j] = -1;
+			yra[i][j] = false;
+		}
+	while (n--)
+	{
+		int x, y;
+		cin >> x >> y;
+		yra[x % c][y % c] = true;
+		yra[y % c][x % c] = true;
+	}
+	for (int i = 0; i < c; i++)
+	{
+		if (yra[i][mod(i + 1)] && DP1(i, mod(i + 1)))
+		{
+			print(mod(i + 1));
+			return make1(i, mod(i + 1));
+		}
+		if (yra[i][mod(i + 1)] && DP2(i, mod(i + 1)))
+		{
+			print(i);
+			return make2(i, mod(i + 1));
+		}
+	}
+	cout << -1;
+}
