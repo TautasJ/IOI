@@ -1,0 +1,77 @@
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+struct height
+{
+	int a;
+	int b;
+	height() {}
+	height(int a, int b): a(a), b(b) {}
+	void operator+=(height x)
+	{
+		a = max(a, x.a);
+		b = max(b, x.a);
+		b = min(b, x.b);
+		a = min(a, x.b);
+	}
+};
+struct tree
+{
+	int l, r;
+	height lazy = height(0, 0);
+	int h = 0;
+	tree *left = NULL, *right = NULL;
+	tree(int l, int r): l(l), r(r)
+	{
+		if (l < r)
+		{
+			left = new tree(l, (l + r) / 2);
+			right = new tree((l + r) / 2 + 1, r);
+		}
+	}
+	void fix()
+	{
+		h = max(h, lazy.a);
+		h = min(h, lazy.b);
+		if (l < r)
+		{
+			left->lazy += lazy;
+			right->lazy += lazy;
+		}
+		lazy = height(0, 1000000);
+	}
+	int get(int A[])
+	{
+		fix();
+		if (l == r)
+			return A[l] = h;
+		left->get(A);
+		right->get(A);
+	}
+	void set(int t, int a, int b, int h)
+	{
+		if (a <= l && r <= b)
+		{
+			if (t == 1)
+				lazy += height(h, 1000000);
+			if (t == 2)
+				lazy += height(0, h);
+			return;
+		}
+		if (r < a || b < l)
+			return;
+		if (l < r)
+		{
+			fix();
+			left->set(t, a, b, h);
+			right->set(t, a, b, h);
+		}
+	}
+};
+void buildWall(int n, int k, int op[], int left[], int right[], int height[], int finalHeight[])
+{ 
+	tree X(0, n - 1);
+	for (int i = 0; i < k; i++)
+		X.set(op[i], left[i], right[i], height[i]);
+	X.get(finalHeight);
+}
