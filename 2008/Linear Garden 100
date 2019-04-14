@@ -1,0 +1,114 @@
+/*input
+12
+10000
+LPLLPLPPLPLL
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+ll M;
+pair<int, int>XXX[1000001];
+ll kelintas(vector<int> &S, int suma, int mn, int mx)
+{
+	if (S.size() == 1)
+	{
+		if (S.back() == -1)
+		{
+			return 1;
+		}
+		else
+		{
+			ll ans = 0;
+			for (int a : { -1, 1})
+			{
+				int ok = 1;
+				if (a + mn < -2)
+					ok = 0;
+				if (a + mn > 2)
+					ok = 0;
+				if (a + mx < -2)
+					ok = 0;
+				if (a + mx > 2)
+					ok = 0;
+				ans += ok;
+			}
+			return ans;
+		}
+	}
+	int buvo = S.back();
+	S.pop_back();
+	suma -= buvo;
+	if (buvo == -1)
+	{
+		mn = min(buvo, mn + buvo);
+		mx = max(buvo, mx + buvo);
+		ll ret = kelintas(S, suma, mn, mx);
+		return ret;
+	}
+	XXX[S.size()] = {min(-1, mn - 1), max(-1, mx - 1)};
+	mn = min(buvo, mn + buvo);
+	mx = max(buvo, mx + buvo);
+	return kelintas(S, suma, mn, mx);
+}
+ll P[1000001];
+int main()
+{
+	clock_t pradzia = clock();
+	fill_n(XXX, 1000001, make_pair(-10, -10));
+	ios_base::sync_with_stdio(false);
+	int N;
+	string S;
+	cin >> N >> M >> S;
+	P[0] = 1;
+	for (int i = 1; i < 1000001; i++)
+		P[i] = (P[i - 1] * 2) % M;
+	vector<int>X(N);
+	int id = 0;
+	for (char x : S)
+	{
+		id++;
+		if (x == 'L')
+			X[N - id] = -1;
+		else
+			X[N - id] = 1;
+	}
+	int suma = 0;
+	for (int i : X)
+		suma += i;
+	ll ans = kelintas(X, suma, 0, 0);
+
+	for (int t = 0; t <= N; t++)
+	{
+		if (XXX[t] != make_pair(-10, -10))
+		{
+			ll a = XXX[t].first;
+			ll b = XXX[t].second;
+			a = min(a, 0ll);
+			b = max(b, 0ll);
+			if (b > a + 2)
+				continue;
+			ll K = t;
+			if (a == -1 && b == 1)
+			{
+				ans += P[(K + 1) / 2];
+				ans %= M;
+				continue;
+			}
+			if (b - a == 2)
+			{
+				ans += P[(K) / 2];
+				ans %= M;
+				continue;
+			}
+			ans += P[(K) / 2];
+			ans += P[(K + 1) / 2];
+			ans--;
+			ans += M;
+			ans %= M;
+		}
+	}
+
+	cout << ans << "\n";
+	cerr << double(clock() - pradzia) / CLOCKS_PER_SEC << "\n";
+}
