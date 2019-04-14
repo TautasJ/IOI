@@ -1,0 +1,98 @@
+/*input
+4 5
+1 2 3 7
+0 4 5 9 10
+
+*/
+//#include "wiring.h"
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+const ll INF = 5e16;
+long long min_total_length(std::vector<int> a, std::vector<int> b)
+{
+	vector<pair<ll, int>>c;
+	int a_i = 0;
+	int b_i = 0;
+	while (a_i < a.size() || b_i < b.size())
+	{
+		if (a_i >= a.size())
+		{
+			c.emplace_back(b[b_i++], 1);
+		}
+		else if (b_i >= b.size() || a[a_i] < b[b_i])
+		{
+			c.emplace_back(a[a_i++], 0);
+		}
+		else
+		{
+			c.emplace_back(b[b_i++], 1);
+		}
+	}
+	vector<vector<ll>>A;
+	vector<ll>g;
+	for (int i = 0; i < c.size(); i++)
+	{
+		g.push_back(c[i].first);
+		if (i + 1 >= c.size() || c[i].second != c[i + 1].second)
+		{
+			A.push_back(g);
+			g.clear();
+		}
+	}
+	vector<vector<ll>>DP;
+	vector<vector<ll>>SUMA;
+	for (vector<ll>a : A)
+	{
+		vector<ll>dp(a.size() + 1, INF);
+		DP.push_back(dp);
+		SUMA.push_back({0});
+		for (ll i : a)
+			SUMA.back().push_back(SUMA.back().back() + i);
+	}
+	DP[0][0] = 0;
+	for (int i = 1; i < DP.size(); i++)
+	{
+		DP[i][0] = DP[i - 1].back();
+		for (int t = 1; t <= A[i].size(); t++)
+		{
+			DP[i][t] = min(DP[i][t], DP[i][t - 1] + A[i][t - 1] - A[i - 1].back());
+			if (i + 1 < DP.size())
+				DP[i][t] = min(DP[i][t], DP[i][t - 1] + A[i + 1].front() - A[i][t - 1]);
+			for (int a : {1, t, (int)A[i - 1].size()})
+			{
+				if (A[i - 1].size() < a)
+					continue;
+				ll suma = SUMA[i][t] - (SUMA[i - 1].back() - SUMA[i - 1][A[i - 1].size() - a]);
+				suma += DP[i - 1][A[i - 1].size() - a];
+				if (a > t)
+				{
+					suma += A[i].front() * (a - t);
+				}
+				else
+				{
+					suma += A[i - 1].back() * (a - t);
+				}
+				DP[i][t] = min(DP[i][t], suma);
+			}
+		}
+	}
+	return DP.back().back();
+}
+/*
+int main()
+{
+	ll n, m;
+	assert(2 == scanf("%lld %lld", &n, &m));
+
+	vector<int> r(n), b(m);
+	for (ll i = 0; i < n; i++)
+		assert(1 == scanf("%lld", &r[i]));
+	for (ll i = 0; i < m; i++)
+		assert(1 == scanf("%lld", &b[i]));
+
+	long long res = min_total_length(r, b);
+	printf("%lld\n", res);
+
+	return 0;
+}/**/
