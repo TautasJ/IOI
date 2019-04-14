@@ -1,0 +1,53 @@
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+int rectangle(int R, int C, int H, int W, int Q[3001][3001])
+{
+	vector<vector<int>>A(3001, vector<int>(3001, 0));
+	int lo = 1;
+	int hi = R * C;
+	while (lo < hi)
+	{
+		int m = (lo + hi + 1) / 2;
+		for (int i = 1; i <= R; i++)
+		{
+			for (int j = 1; j <= C; j++)
+			{
+				if (Q[i - 1][j - 1] >= m)
+					A[i][j] = 1;
+				else
+					A[i][j] = 0;
+				A[i][j] += A[i - 1][j];
+				A[i][j] += A[i][j - 1];
+				A[i][j] -= A[i - 1][j - 1];
+			}
+		}
+		bool ok = false;
+		for (int i = H; i <= R; i++)
+		{
+			for (int j = W; j <= C; j++)
+			{
+				int kiek = 0;
+				kiek += A[i][j];
+				kiek -= A[i - H][j];
+				kiek -= A[i][j - W];
+				kiek += A[i - H][j - W];
+				if (kiek <= H * W / 2)
+					ok = true;
+			}
+		}
+		if (ok)
+			hi = m - 1;
+		else
+			lo = m;
+	}
+	return (lo + hi) / 2;
+}/*
+int X[3001][3001];
+int main()
+{
+	for (int i = 0; i < 5; i++)
+		for (int j = 0; j < 5; j++)
+			X[i][j] = 5 * i + j + 1;
+	cout << rectangle(5, 5, 3, 3, X) << endl;
+}/**/
