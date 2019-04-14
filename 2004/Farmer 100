@@ -1,0 +1,61 @@
+/*input
+17 3 3
+13 4 8
+4 8 6
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+int A[151515];
+const int modulo = 1000000007;
+bitset<151515>AA;
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	A[0] = 1;
+	AA[0] = 1;
+	int Q, M, K;
+	cin >> Q >> M >> K;
+	vector<int>g1;
+	while (M--)
+	{
+		int N;
+		cin >> N;
+		g1.push_back(N);
+	}
+	vector<int>g2;
+	while (K--)
+	{
+		int N;
+		cin >> N;
+		g2.push_back(N);
+	}
+	sort(g1.begin(), g1.end(), less<int>());
+	for (int N : g1)
+	{
+		AA = (AA | (AA << N));
+	}
+	int mx = 0;
+	for (int i = 0; i <= Q + 300; i++)
+		if (AA[i] != 0)
+			mx = i;
+	if (mx > Q)
+	{
+		if (AA[Q])
+			mx = Q;
+		else
+			mx = Q - 1;
+	}
+	sort(g2.begin(), g2.end(), greater<int>());
+	for (int N : g2)
+	{
+		int c = min(N, Q - mx);
+		if (c >= 2)
+		{
+			mx += (c - 1);
+			Q--;
+		}
+	}
+	cout << mx << "\n";
+	return 0;
+}
