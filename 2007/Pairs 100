@@ -1,0 +1,199 @@
+/*input
+3 8 10 20
+10 10 10
+10 10 20
+10 20 10
+10 20 20
+20 10 10
+20 10 20
+20 20 10
+20 20 20
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+ll spresk1(ll N, ll D)
+{
+	vector<ll>x(N);
+	for (ll &i : x)
+		cin >> i;
+	sort(x.begin(), x.end());
+	ll ans = 0;
+	ll l = 0;
+	for (ll r = 0; r < x.size(); r++)
+	{
+		while (x[l] < x[r] - D)
+			l++;
+		ans += r - l;
+	}
+	return ans;
+}
+struct ST
+{
+	int l, r;
+	int kiekis = 0;
+	ST *left = NULL;
+	ST *right = NULL;
+	ST(int l, int r): l(l), r(r)
+	{
+		if (l < r)
+		{
+			left = new ST(l, (l + r) / 2);
+			right = new ST((l + r) / 2 + 1, r);
+		}
+	}
+	void add(int i, int w = 1)
+	{
+		kiekis += w;
+		if (l < r)
+		{
+			int m = (l + r) / 2;
+			if (i <= m)
+			{
+				left->add(i, w);
+			}
+			else
+			{
+				right->add(i, w);
+			}
+		}
+	}
+	int get(int x, int y)
+	{
+		if (x <= l && r <= y)
+			return kiekis;
+		if (r < x || y < l)
+			return 0;
+		return left->get(x, y) + right->get(x, y);
+	}
+};
+ll spresk2(ll N, ll D)
+{
+	ll ans = 0;
+	vector<pair<int, int>>X(N);
+	for (int i = 0; i < N; i++)
+	{
+		cin >> X[i].first >> X[i].second;
+		X[i] = {X[i].first - X[i].second, X[i].first + X[i].second};
+	}
+	sort(X.begin(), X.end());
+	int id = 0;
+	ST XXX(0, 150001);
+	for (pair<int, int>i : X)
+	{
+		while (X[id].first < i.first - D)
+		{
+			XXX.add(X[id].second, -1);
+			id++;
+		}
+		ans += XXX.get(i.second - D, i.second + D);
+		XXX.add(i.second, 1);
+	}
+	return ans;
+}
+struct sums
+{
+	int SUM[151][151];
+	sums()
+	{
+		for (int i = 0; i < 151; i++)
+		{
+			for (int j = 0; j < 151; j++)
+			{
+				SUM[i][j] = 0;
+			}
+		}
+	}
+	void add(int x, int y)
+	{
+		SUM[x][y]++;
+	}
+	void sumuok()
+	{
+		for (int i = 1; i < 151; i++)
+		{
+			for (int j = 1; j < 151; j++)
+			{
+				SUM[i][j] += SUM[i - 1][j];
+				SUM[i][j] += SUM[i][j - 1];
+				SUM[i][j] -= SUM[i - 1][j - 1];
+			}
+		}
+	}
+	int suma(int x1, int x2, int y1, int y2)
+	{
+		x1 = max(x1, 1);
+		y1 = max(y1, 1);
+		x2 = min(x2, 150);
+		y2 = min(y2, 150);
+		return SUM[x2][y2] - SUM[x1 - 1][y2] - SUM[x2][y1 - 1] + SUM[x1 - 1][y1 - 1];
+	}
+};
+sums Y[76];
+ll spresk3(ll N, ll D)
+{
+	ll ans = 0;
+	int x[N];
+	int y[N];
+	int z[N];
+	vector<pair<int, int>>X[76];
+	for (int i = 0; i < N; i++)
+	{
+		cin >> x[i] >> y[i] >> z[i];
+		X[x[i]].push_back({y[i], z[i]});
+	}
+	for (int i = 0; i < 76; i++)
+	{
+		for (pair<int, int> &j : X[i])
+		{
+			j = {j.first - j.second + 75, j.first + j.second - 1};
+			Y[i].add(j.first, j.second);
+		}
+		Y[i].sumuok();
+	}
+	for (int x1 = 0; x1 < 76; x1++)
+	{
+		for (int x2 = 0; x2 <= x1; x2++)
+		{
+			int x12 = abs(x1 - x2);
+			if (x12 > D)
+				continue;
+			vector<pair<int, int>>z;
+			D -= x12;
+			if (x1 != x2)
+			{
+				for (pair<int, int>i : X[x1])
+				{
+					ans += Y[x2].suma(i.first - D, i.first + D,
+					                  i.second - D, i.second + D);
+				}
+			}
+			else
+			{
+				int suma = 0;
+				for (pair<int, int>i : X[x1])
+				{
+					suma += Y[x1].suma(i.first - D, i.first + D, i.second - D, i.second + D);
+					suma--;
+				}
+				ans += suma / 2;
+			}
+			D += x12;
+		}
+	}
+	return ans;
+}
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	ll B, N, D, M;
+	cin >> B >> N >> D >> M;
+	D = min(D, B * M);
+	if (B == 1)
+		cout << spresk1(N, D) << "\n";
+	if (B == 2)
+		cout << spresk2(N, D) << "\n";
+	if (B == 3)
+		cout << spresk3(N, D) << "\n";
+}
+
