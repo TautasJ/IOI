@@ -1,0 +1,117 @@
+/*input
+4 5 3 100
+2 80 100
+20 125 130
+10 75 150
+5 120 110
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+const ll INF = 1e12;
+struct ST
+{
+	ll mx = -INF;
+	ll lazy = -INF;
+	int l, r;
+	ST *left;
+	ST *right;
+	ST(ll l, ll r): l(l), r(r)
+	{
+		if (l < r)
+		{
+			left = new ST(l, (l + r) / 2);
+			right = new ST((l + r) / 2 + 1, r);
+		}
+	}
+	void fix()
+	{
+		mx = max(mx, lazy);
+		if (l < r)
+		{
+			left->lazy = max(left->lazy, lazy);
+			right->lazy = max(right->lazy, lazy);
+		}
+		lazy = -INF;
+	}
+	void set(ll a, ll b, ll gal)
+	{
+		if (a <= l && r <= b)
+		{
+			lazy = max(lazy, gal);
+			return fix();
+		}
+		fix();
+		if (b < l || r < a)
+			return;
+		left->set(a, b, gal);
+		right->set(a, b, gal);
+		mx = max(left->mx, right->mx);
+	}
+	ll get(ll i)
+	{
+		fix();
+		if (l <= i && i <= r)
+		{
+			if (l == r)
+				return mx;
+			return max(left->get(i), right->get(i));
+		}
+		return -INF;
+	}
+};
+ST MX1(0, 500001);
+ST MX2(0, 500001);
+int P[500001], T[500001], X[500001];
+int A[500001];
+int main()
+{
+	ios_base::sync_with_stdio(false), cin.tie(0), cout.tie(0), cerr.tie(0);
+	ll N, U, D, S;
+	cin >> N >> U >> D >> S;
+	for (ll i = 0; i < N; i++)
+		cin >> T[i] >> X[i] >> P[i];
+	for (ll i = 0; i < N; i++)
+		A[i] = i;
+	sort(A, A + N, [&](ll a, ll b) {return T[a] < T[b];});
+	ll ans = 0;
+	MX1.set(S, 500001, S * D);
+	MX2.set(0, S, -S * U);
+	vector<int>visi;
+	for (int j = 0; j < N; j++)
+	{
+		visi.push_back(A[j]);
+		if (j + 1 < N && T[A[j]] == T[A[j + 1]])
+			continue;
+		sort(visi.begin(), visi.end(), [&](int a, int b) {return X[a] < X[b];});
+		int n = visi.size();
+		vector<ll>Suf(n);
+		vector<ll>Pre(n);
+		for (int i = 0; i < n; i++)
+			Suf[i] = Pre[i] = ll(P[visi[i]]) + max(
+			                      -ll(X[visi[i]]) * D + MX1.get(X[visi[i]]),
+			                      ll(X[visi[i]]) * U + MX2.get(X[visi[i]])
+			                  );
+		for (int i = 1; i < n; i++)
+			Pre[i] = max(Pre[i], Pre[i - 1] + P[visi[i]] - D * ll(X[visi[i]] - X[visi[i - 1]]));
+		for (int i = n - 2; i >= 0; i--)
+			Suf[i] = max(Suf[i], Suf[i + 1] + P[visi[i]] - U * ll(X[visi[i + 1]] - X[visi[i]]));
+		for (int i = 0; i < n; i++)
+		{
+			ll maxi = max(Suf[i], Pre[i]);
+			MX1.set(X[visi[i]], 500001, maxi + ll(X[visi[i]]) * D);
+			MX2.set(0, X[visi[i]], maxi - ll(X[visi[i]]) * U);
+			if (X[visi[i]] >= S)
+			{
+				ans = max(ans, maxi - ll(X[visi[i]] - S) * U);
+			}
+			else
+			{
+				ans = max(ans, maxi - ll(S - X[visi[i]]) * D);
+			}
+		}
+		visi.clear();
+	}
+	cout << ans << "\n";
+}
