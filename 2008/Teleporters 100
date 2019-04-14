@@ -1,0 +1,73 @@
+/*input
+3
+3
+5 7
+6 10
+1999999 2000000
+*/
+#include <bits/stdc++.h>
+using namespace std;
+vector<pair<int, int>>T;
+int S[1000001], E[1000001];
+bool buvau[2020202];
+int V = 0;
+void einam(int s)
+{
+	if (buvau[s])
+		return;
+	buvau[s] = true;
+	V++;
+	auto it = upper_bound(T.begin(), T.end(), make_pair(s + 1, -10));
+	if (it == T.end())
+		return;
+	else
+	{
+		int i = it->second;
+		if (s < S[i])
+			return einam(E[i]);
+		else
+			return einam(S[i]);
+	}
+}
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	int N, M;
+	cin >> N >> M;
+	for (int i = 0; i < N; i++)
+	{
+		cin >> S[i] >> E[i];
+		T.push_back({S[i], i});
+		T.push_back({E[i], i});
+	}
+	sort(T.begin(), T.end());
+	einam(0);
+	int ans = (V - 1);
+	V = 0;
+	vector<int>sz;
+	for (int i = 0; i < N; i++)
+	{
+		if (!buvau[S[i]])
+		{
+			einam(S[i]);
+			sz.push_back(V);
+			V = 0;
+		}
+		if (!buvau[E[i]])
+		{
+			einam(E[i]);
+			sz.push_back(V);
+			V = 0;
+		}
+	}
+	sort(sz.begin(), sz.end());
+	while (!sz.empty() && M > 0)
+	{
+		ans += sz.back() + 2;
+		sz.pop_back();
+		M--;
+	}
+	ans += (M - M % 2) * 2;
+	ans += (M % 2);
+	cout << ans << "\n";
+}
