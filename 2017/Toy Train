@@ -1,0 +1,175 @@
+/*input
+10 12
+0 0 0 0 0 0 0 0 0 0
+1 0 0 1 0 1 0 1 0 0
+0 1
+1 2
+2 3
+3 0
+4 5
+5 4
+6 7
+7 9
+8 9
+9 6
+3 4
+9 9
+*/
+#include "train.h"
+#include <bits/stdc++.h>
+#pragma comment(linker, "/STACK:167772160000")
+using namespace std;
+vector<bool>operator!(vector<bool>a)
+{
+	vector<bool>b = a;
+	for (int i = 0; i < b.size(); i++)
+	{
+		b[i] = !b[i];
+	}
+	return b;
+}
+vector<bool>operator&(vector<bool>a, vector<bool>b)
+{
+	vector<bool>c(max(a.size(), b.size()), false);
+	for (int i = 0; i < a.size() && i < b.size(); i++)
+		c[i] = a[i] && b[i];
+	return c;
+}
+vector<int> who_wins(std::vector<int> a, std::vector<int> r,
+                     std::vector<int> u, std::vector<int> v)
+{
+
+	int n = a.size();
+	int m = u.size();
+	set<int>out[n];
+	set<int>in[n];
+	for (int i = 0; i < m; i++)
+		out[u[i]].insert(v[i]);
+	for (int i = 0; i < m; i++)
+		in[v[i]].insert(u[i]);
+	/*for (int i = 0; i < n; i++)
+		assert(out[i].size() >= 1);*/
+	function<vector<bool>(vector<bool>&, bool)>fA_B = [&](vector<bool> &S, bool A_B)->vector<bool>
+	{
+		vector<bool>T = S;
+		int kiek[n];
+		for (int i = 0; i < n; i++)
+		{
+			if (S[i])
+				kiek[i] = 0;
+			else if (a[i] == A_B)
+				kiek[i] = 1;
+			else
+				kiek[i] = out[i].size();
+		}
+		vector<int>Q;
+		for (int i = 0; i < n; i++)
+			if (S[i])
+				Q.push_back(i);
+		while (!Q.empty())
+		{
+			int a = Q.back();
+			Q.pop_back();
+			for (int b : in[a])
+			{
+				kiek[b]--;
+				if (kiek[b] <= 0 && T[b] == 0)
+				{
+					T[b] = 1;
+					Q.push_back(b);
+				}
+			}
+		}
+		return T;
+	};//A->1, B->0
+	vector<int>res(n, 1);
+	vector<bool>visi(n, true);
+	vector<bool>tuscias(n, false);
+	while (visi != tuscias)
+	{
+		vector<bool>R(n, false);
+		for (int i = 0; i < n; i++)
+			if (visi[i])
+				R[i] = r[i];
+		vector<bool>A = fA_B(R, 1);
+		if (A == visi)
+		{
+			visi = tuscias;
+			break;
+		}
+		vector<bool>X = ((!A) & (visi));
+		vector<bool>Y = fA_B(X, 0);
+		vector<bool>visi_ = tuscias;
+		for (int i = 0; i < n; i++)
+		{
+			if (Y[i] && visi[i])
+			{
+				res[i] = 0;
+			}
+			else if (visi[i])
+			{
+				visi_[i] = true;
+			}
+		}
+		for (int i = 0; i < n; i++)
+		{
+			if (Y[i] && visi[i])
+			{
+				for (int j : out[i])
+					in[j].erase(i);
+				for (int j : in[i])
+					out[j].erase(i);
+				out[i].clear();
+				in[i].clear();
+			}
+		}
+		visi = visi_;
+	}
+	return res;
+}
+/*
+
+int main()
+{
+	srand(time(NULL));
+	int n, m;
+	//assert(2 == scanf("%d %d", &n, &m));
+	n = 5000;
+	m = 20000;
+	vector<int> a(n), r(n), u(m), v(m);
+
+	for (int i = 0; i < n; i++)
+	{
+		//a[i] = rand() % 2;
+		a[i] = rand() % 2;
+		//assert(1 == scanf("%d", &a[i]));
+	}
+
+	for (int i = 0; i < n; i++)
+	{
+		r[i] = rand() % 2;
+		//assert(1 == scanf("%d", &r[i]));
+	}
+	set<pair<int, int>>A;
+	for (int i = 0; i < m; i++)
+	{
+		u[i] = rand() % n;
+		v[i] = rand() % n;
+		while (A.count({u[i], v[i]}))
+		{
+			u[i] = rand() % n;
+			v[i] = rand() % n;
+		}
+		A.insert({u[i], v[i]});
+		//assert(2 == scanf("%d %d", &u[i], &v[i]));
+	}
+
+	vector<int> res = who_wins(a, r, u, v);
+
+	for (int i = 0; i < (int)res.size(); i++)
+		printf(i ? " %d" : "%d", res[i]);
+	printf("\n");
+
+	return 0;
+}
+/**/
