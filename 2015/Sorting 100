@@ -1,0 +1,87 @@
+#include "sorting.h"
+#include <bits/stdc++.h>
+using namespace std;
+int findSwapPairs(int N, int S[], int M, int X[], int Y[], int P[], int Q[])
+{
+	int lo = 0;
+	int hi = M;
+	while (lo < hi)
+	{
+		int m = (lo + hi) / 2;
+		int s[N];
+		for (int i = 0; i < N; i++)
+			s[i] = S[i];
+		for (int i = 0; i < m; i++)
+			swap(s[X[i]], s[Y[i]]);
+		int kur[N];
+		for (int i = 0; i < N; i++)
+			kur[s[i]] = i;
+		int kiek = 0;
+		for (int i = 0; i < N; i++)
+		{
+			if (kur[i] != i)
+			{
+				int j = kur[i];
+				kiek++;
+				swap(s[i], s[j]);
+				kur[s[i]] = i;
+				kur[s[j]] = j;
+			}
+		}
+		if (kiek <= m)
+			hi = m;
+		else
+			lo = m + 1;
+	}
+	int m = lo;
+	int s[N];
+	for (int i = 0; i < N; i++)
+		s[i] = S[i];
+	for (int i = 0; i < m; i++)
+		swap(s[X[i]], s[Y[i]]);
+	int kur[N];
+	for (int i = 0; i < N; i++)
+		kur[s[i]] = i;
+	int kiek = 0;
+	deque<pair<int, int>>QQ;
+	for (int i = 0; i < N; i++)
+	{
+		if (kur[i] != i)
+		{
+			int j = kur[i];
+			kiek++;
+			swap(s[i], s[j]);
+			QQ.push_back({s[i], s[j]});
+			kur[s[i]] = i;
+			kur[s[j]] = j;
+		}
+	}
+	for (int i = 0; i < N; i++)
+		kur[S[i]] = i;
+	for (int i = 0; i < m; i++)
+	{
+		swap(S[X[i]], S[Y[i]]);
+		kur[S[X[i]]] = X[i];
+		kur[S[Y[i]]] = Y[i];
+		if (!QQ.empty())
+		{
+			int a = QQ.front().first;
+			int b = QQ.front().second;
+			QQ.pop_front();
+			int x = kur[a];
+			int y = kur[b];
+			P[i] = x;
+			Q[i] = y;
+		}
+		else
+		{
+			P[i] = Q[i] = 0;
+		}
+		swap(S[P[i]], S[Q[i]]);
+		kur[S[P[i]]] = P[i];
+		kur[S[Q[i]]] = Q[i];
+	}
+	return m;
+}
+
+
