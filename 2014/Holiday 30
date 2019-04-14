@@ -1,0 +1,98 @@
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+inline ll Letas(int n, int start, int d, int attraction[])
+{
+	ll ans = 0;
+	for (int l = 0; l <= start; l++)
+	{
+		for (int r = start; r < n; r++)
+		{
+			int R = r - l + min(r - start, start - l);
+			int k = d - R;
+			if (k <= 0)
+				continue;
+			vector<ll>x;
+			for (int i = l; i <= r; i++)
+				x.push_back(attraction[i]);
+			sort(x.begin(), x.end(), greater<int>());
+			for (int i = 0; i < x.size(); i++)
+			{
+				if (i > 0)
+					x[i] += x[i - 1];
+				if (i + 1 <= k)
+					ans = max(ans, x[i]);
+			}
+		}
+	}
+	return ans;
+}
+inline ll Greitesnis(int n, int start, int d, int attraction[])
+{	clock_t begin = clock();
+	ll ans = 0;
+	vector<int>xxx;
+	for (int l = 0; l <= start; l++)
+		xxx.push_back(l);
+	srand(begin);
+	srand(rand()^d ^ start ^ n ^ attraction[rand() % n]);
+	random_shuffle(xxx.begin(), xxx.end());
+	for (int l : xxx)
+	{
+		if (start - l >= d)
+			continue;
+		deque<int>X;
+		ll suma = 0;
+		for (int i = l; i < start; i++)
+		{
+			int x = attraction[i];
+			suma += x;
+			X.insert(upper_bound(X.begin(), X.end(), x), x);
+		}
+		for (int r = start; r < n; r++)
+		{
+			if (double(clock() - begin) / CLOCKS_PER_SEC >= 4.95)
+				return ans;
+			int R = r - l + min(r - start, start - l);
+			int k = d - R;
+			if (k <= 0)
+				break;
+			while (X.size() > k)
+			{
+				auto it = X.cbegin();
+				suma -= *it;
+				X.erase(it);
+			}
+			int x = attraction[r];
+			if (X.size() == k)
+			{
+				if (X.front() < x)
+				{
+					suma -= X.front();
+					X.pop_front();
+					X.insert(upper_bound(X.begin(), X.end(), x), x);
+					suma += x;
+				}
+			}
+			else
+			{
+				X.insert(upper_bound(X.begin(), X.end(), x), x);
+				suma += x;
+			}
+			ans = max(ans, suma);
+		}
+	}
+	return ans;
+}
+ll findMaxAttraction(int n, int start, int d, int attraction[])
+{
+	if (n <= 20)
+		return Letas(n, start, d, attraction);
+	return Greitesnis(n, start, d, attraction);
+}
+/*
+int main()
+{
+	int A[] = {1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+	cout << findMaxAttraction(5, 1, 2, A) << "\n";
+}/**/
