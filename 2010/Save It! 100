@@ -1,0 +1,206 @@
+/*input
+
+*/
+#include <bits/stdc++.h>
+#include "grader.h"
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+void encode(int N, int H, int P, int A[], int B[])
+{
+	auto ENCODE = [](int k, int mx)->void
+	{
+		for (int t = 0; t < mx; t++)
+		{
+			encode_bit((k % 2));
+			k /= 2;
+		}
+	};
+	vector<int>X;
+	auto ENCODE2 = [&](int k)->void
+	{
+		X.push_back(k);
+	};
+	auto fix = [&]()->void
+	{
+		while (X.size() % 3 != 0)
+			X.push_back(0);
+		for (int t = 2; t < X.size(); t += 3)
+		{
+			int a = X[t - 2] + X[t - 1] * 3 + X[t] * 9;
+			ENCODE(a, 5);
+		}
+	};
+	bool yra[N][N];
+	for (int i = 0; i < N; i++)
+	{
+		for (int j = 0; j < N; j++)
+		{
+			yra[i][j] = false;
+		}
+	}
+	for (int i = 0; i < P; i++)
+		yra[A[i]][B[i]] = yra[B[i]][A[i]] = true;
+	int D[N][H];
+	for (int i = 0; i < N; i++)
+	{
+		for (int j = 0; j < H; j++)
+		{
+			D[i][j] = N + 1;
+		}
+	}
+	int pa[N];
+	{
+		int j = 0;
+		D[j][j] = 0;
+		queue<int>Q;
+		Q.push(j);
+		pa[j] = j;
+		while (!Q.empty())
+		{
+			int i = Q.front();
+			Q.pop();
+			for (int k = 0; k < N; k++)
+			{
+				if (yra[i][k] && D[k][j] > D[i][j] + 1)
+				{
+					pa[k] = i;
+					D[k][j] = D[i][j] + 1;
+					Q.push(k);
+				}
+			}
+		}
+		for (int i = 0; i < N; i++)
+		{
+			ENCODE(pa[i], 10);
+		}
+	}
+	for (int j = 1; j < H; j++)
+	{
+		D[j][j] = 0;
+		queue<int>Q;
+		Q.push(j);
+		while (!Q.empty())
+		{
+			int i = Q.front();
+			Q.pop();
+			for (int k = 0; k < N; k++)
+			{
+				if (yra[i][k] && D[k][j] > D[i][j] + 1)
+				{
+					D[k][j] = D[i][j] + 1;
+					Q.push(k);
+				}
+			}
+		}
+		for (int i = 0; i < N; i++)
+		{
+			int w = D[i][j] - D[pa[i]][j] + 1;
+			ENCODE2(w);
+		}
+	}
+	fix();
+
+
+}
+void decode(int N, int H)
+{
+	auto DECODE = [](int mx = 10)->int
+	{
+		int w = 1;
+		int ans = 0;
+		for (int t = 0; t < mx; t++)
+		{
+			ans += w * decode_bit();
+			w *= 2;
+		}
+		return ans;
+	};
+	vector<int>X;
+	int nr = 0;
+	auto DECODE2 = [&]()->int
+	{
+		return X[nr++];
+	};
+	auto fix = [&]()->void
+	{
+		while (X.size() < (N * (H - 1)))
+			X.push_back(0);
+		while (X.size() % 3 != 0)
+			X.push_back(0);
+		for (int t = 2; t < X.size(); t += 3)
+		{
+			//int a = X[t - 2] + X[t - 1] * 3 + X[t] * 9;
+			int a = DECODE(5);
+			X[t - 2] = a % 3;
+			a /= 3;
+			X[t - 1] = a % 3;
+			a /= 3;
+			X[t] = a % 3;
+			a /= 3;
+		}
+	};
+	int D[N][N];
+	for (int i = 0; i < N; i++)
+	{
+		for (int j = 0; j < N; j++)
+		{
+			D[i][j] = N + 1;
+		}
+	}
+	for (int j = 0; j < N; j++)
+		D[j][j] = 0;
+	int pa[N];
+	for (int i = 0; i < N; i++)
+		pa[i] = DECODE();
+	fix();
+	queue<int>Q;
+	Q.push(0);
+	while (!Q.empty())
+	{
+		int a = Q.front();
+		Q.pop();
+		for (int i = 0; i < N; i++)
+		{
+			if (i == a)
+				continue;
+			if (pa[i] == a)
+			{
+				D[i][0] = D[a][0] + 1;
+				D[0][i] = D[0][a] + 1;
+				Q.push(i);
+			}
+		}
+	}
+	vector<pair<int, int>>G;
+	for (int i = 0; i < N; i++)
+		G.push_back({D[0][i], i});
+	sort(G.begin(), G.end());
+	for (int j = 1; j < H; j++)
+	{
+		D[j][j] = 0;
+		queue<int>Q;
+		Q.push(j);
+		int W[N];
+		for (int i = 0; i < N; i++)
+			W[i] = DECODE2();
+		for (auto xx : G)
+		{
+			int i = xx.second;
+			D[i][j] = W[i] + D[pa[i]][j] - 1;
+			D[j][i] = W[i] + D[pa[i]][j] - 1;
+		}
+	}
+	for (int i = 0; i < N; i++)
+	{
+		for (int j = 0; j < H; j++)
+		{
+			hops(j, i, D[i][j]);
+		}
+	}
+}
+/*
+int main()
+{
+
+}/**/
