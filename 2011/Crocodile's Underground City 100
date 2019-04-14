@@ -1,0 +1,81 @@
+/*input
+5 7 2
+0 2 4
+0 3 3
+3 2 2
+2 1 10
+0 1 100
+0 4 7
+3 4 9
+1
+3
+*/
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+const int INF = 1000000009;
+int antras(map<int, int> &X)
+{
+	if (X.size() < 2)
+		return INF;
+	vector<pair<int, int>>Y;
+	for (auto i : X)
+		Y.push_back({i.second, i.first});
+	sort(Y.begin(), Y.end());
+	X.clear();
+	for (int a : {0, 1})
+		X[Y[a].second] = Y[a].first;
+	return Y[1].first;
+}
+int travel_plan(int N, int M, int R[][2], int L[], int K, int P[])
+{
+	int D[N];
+	fill_n(D, N, INF);
+	priority_queue<pair<int, int>, vector<pair<int, int>>, greater<pair<int, int>>>Q;
+	for (int i = 0; i < K; i++)
+	{
+		D[P[i]] = 0;
+		Q.push({D[P[i]], P[i]});
+	}
+	vector<pair<int, int>>adj[N];
+	for (int i = 0; i < M; i++)
+		for (int t : {0, 1})
+			adj[R[i][t]].push_back({R[i][1 - t], L[i]});
+	map<int, int>X[N];
+	bool buvau[N];
+	fill_n(buvau, N, false);
+	while (!Q.empty())
+	{
+		int b = Q.top().second;
+		Q.pop();
+		if (buvau[b])
+			continue;
+		buvau[b] = true;
+		for (pair<int, int>a : adj[b])
+		{
+			if (X[a.first].count(b) == 0)
+				X[a.first][b] = INF;
+			X[a.first][b] = min(X[a.first][b], D[b] + a.second);
+			if (D[a.first] > antras(X[a.first]))
+			{
+				D[a.first] = antras(X[a.first]);
+				Q.push({D[a.first], a.first});
+			}
+		}
+	}
+	return D[0];
+}
+/*
+int main()
+{
+	int N, M, K;
+	cin >> N >> M >> K;
+	int R[M][2];
+	int L[M];
+	int P[K];
+	for (int i = 0; i < M; i++)
+		cin >> R[i][0] >> R[i][1] >> L[i];
+	for (int i = 0; i < K; i++)
+		cin >> P[i];
+	cout << travel_plan(N, M, R, L, K, P);
+}/**/
