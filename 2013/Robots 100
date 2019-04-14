@@ -1,0 +1,96 @@
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+int putaway(int A, int B, int T, int X[], int Y[], int W[], int S[])
+{
+	for (int i = 0; i < A; i++)
+		X[i]--;
+	for (int i = 0; i < B; i++)
+		Y[i]--;
+	sort(X, X + A);
+	sort(Y, Y + B);
+	int lo = 1;
+	int hi = T + 10;
+	while (lo < hi)
+	{
+		int t = (lo + hi) / 2;
+		int yra[T];
+		fill_n(yra, T, 1);
+		{
+			priority_queue<pair<int, int>>Q;
+			priority_queue<pair<int, int>>aa;
+			for (int i = 0; i < T; i++)
+				aa.push({ -W[i], i});
+			for (int i = 0; i < A; i++)
+			{
+				int x = X[i];
+				while (!aa.empty() && -aa.top().first <= x)
+				{
+					int id = aa.top().second;
+					aa.pop();
+					Q.push({S[id], id});
+				}
+				int c = t;
+				while (c > 0 && !Q.empty())
+				{
+					int j = Q.top().second;
+					Q.pop();
+					c -= yra[j];
+					yra[j] = 0;
+				}
+			}
+		}
+		{
+			priority_queue<pair<int, int>>Q;
+			priority_queue<pair<int, int>>aa;
+			for (int i = 0; i < T; i++)
+				if (yra[i])
+					aa.push({ -S[i], i});
+			for (int i = 0; i < B; i++)
+			{
+				int y = Y[i];
+				while (!aa.empty() && -aa.top().first <= y)
+				{
+					int id = aa.top().second;
+					aa.pop();
+					Q.push({W[id], id});
+				}
+				int c = t;
+				while (c > 0 && !Q.empty())
+				{
+					int j = Q.top().second;
+					Q.pop();
+					c -= yra[j];
+					yra[j] = 0;
+				}
+			}
+		}
+		bool ok = true;
+		for (int i : yra)
+			if (i == 1)
+				ok = false;
+		if (ok)
+			hi = t;
+		else
+			lo = t + 1;
+	}
+	int ret = (lo + hi) / 2;
+	if (ret > T)
+		return -1;
+	return ret;
+}
+/*
+int main()
+{
+	{
+		//3
+		int A = 3;
+		int B = 2;
+		int T = 10;
+		int X[] = {6, 2, 9};
+		int Y[] = {4, 7};
+		int W[] = {4, 8, 2, 7, 1, 5, 3, 8, 7, 10};
+		int S[] = {6, 5, 3, 9, 8, 1, 3, 7, 6, 5};
+		cout << putaway(A, B, T, X, Y, W, S) << endl;
+	}
+}/**/
