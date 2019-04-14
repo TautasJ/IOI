@@ -1,0 +1,266 @@
+/***
+100
+I 1 4 2
+I 2 5 7
+I 1 3 6
+I 2 2 -1
+Q 12
+E
+***/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+#define INF (3000000000000000000ll)
+struct query
+{
+	char t;
+	ll a, b, D;
+	query() {}
+	query(char t, ll a, ll b, ll D): t(t), a(a), b(b), D(D) {}
+	query(char t, ll h): t(t), a(h) {}
+};
+struct medis
+{
+	ll a, b;
+	ll mx = 0;
+	ll lazy = 0;
+	ll lazyset = 0;
+	bool Set = false;
+	medis *left = NULL, *right = NULL;
+	medis() {}
+	medis(vector<ll> &A, ll l, ll r)
+	{
+		a = A[l];
+		b = A[r];
+		if (l < r)
+		{
+			left = new medis(A, l, (l + r) / 2);
+			right = new medis(A, (l + r) / 2 + 1, r);
+		}
+	}
+	void fix()
+	{
+		if (Set)
+		{
+			mx = lazyset;
+			if (left)
+			{
+				left->lazyset = lazyset;
+				left->Set = true;
+				left->lazy = 0;
+				right->lazyset = lazyset;
+				right->Set = true;
+				right->lazy = 0;
+			}
+			Set = false;
+			lazyset = 0;
+		}
+		mx += lazy;
+		if (left)
+		{
+			left->lazy += lazy;
+			right->lazy += lazy;
+		}
+		lazy = 0;
+	}
+	void set(ll i, ll v)
+	{
+		fix();
+		if (a <= i && i <= b)
+		{
+			if (a == b)
+				mx = v;
+			else
+			{
+				left->set(i, v);
+				right->set(i, v);
+				mx = max(left->mx, right->mx);
+			}
+		}
+	}
+	void add(ll l, ll r, ll d)
+	{
+		fix();
+		if (l > r)
+			return;
+		if (l <= a && b <= r)
+		{
+			if (Set)
+				lazyset += d;
+			else
+				lazy += d;
+			fix();
+			return;
+		}
+		if (b < l || r < a)
+		{
+			fix();
+			return;
+		}
+		left->add(l, r, d);
+		right->add(l, r, d);
+		mx = max(left->mx, right->mx);
+	}
+	void set(ll l, ll r, ll d)
+	{
+		fix();
+		if (l > r)
+			return;
+		if (l <= a && b <= r)
+		{
+			lazyset = d;
+			Set = true;
+			lazy = 0;
+			fix();
+			return;
+		}
+		if (b < l || r < a)
+			return;
+		left->set(l, r, d);
+		right->set(l, r, d);
+		mx = max(left->mx, right->mx);
+	}
+	ll get(ll x)
+	{
+		fix();
+		if (a <= x && x <= b)
+		{
+			if (a == b)
+				return mx;
+			return max(left->get(x), right->get(x));
+		}
+		return -INF;
+	}
+	ll minx(ll h)
+	{
+		fix();
+		if (left)
+		{
+			left->fix();
+			if (left->mx > h)
+				return left->minx(h);
+		}
+		if (right)
+			return right->minx(h);
+		return a;
+	}
+};
+set<ll>co;
+set<ll>::iterator NextS(set<ll> &x, ll k)
+{
+	return x.lower_bound(k);
+}
+set<ll>::iterator Next(set<ll> &x, ll k)
+{
+	return x.upper_bound(k);
+}
+set<ll>::iterator PrevS(set<ll> &x, ll k)
+{	//Gali buti toks pats
+	return --x.upper_bound(k);
+}
+set<ll>::iterator Prev(set<ll> &x, ll k)
+{	//Gali buti toks pats
+	return --x.lower_bound(k);
+}
+ll n;
+medis ST;
+ll aukstis(ll x)
+{
+	ll a = *PrevS(co, x);
+	ll b = *NextS(co, x);
+	if (b == a)
+		return ST.get(a);
+	ll ha = ST.get(a);
+	ll hb = ST.get(b);
+	if (ha == hb)
+		return ha;
+	return ha + (hb - ha) * (x - a) / (b - a);
+}
+void pridek(ll a, ll b, ll D)
+{
+	ll ha = aukstis(a);
+	ll hb = aukstis(b);
+	co.insert(a);
+	co.insert(b);
+	ll h = ha + (b - a) * D;
+	ST.set(a, ha);
+	ST.set(b, h);
+	ST.set(a + 1, b - 1, min(ha, h));
+	ST.add(b + 1, n, h - hb);
+	if (b < n)
+	{
+		int c = *Next(co, b);
+		ST.set(b + 1, c - 1, min(h, aukstis(c)));
+	}
+	if (a > 0)
+	{
+		int c = *Prev(co, a);
+		ST.set(c + 1, a - 1, min(ha, aukstis(c)));
+	}
+	while (*Next(co, a) < b)
+		co.erase(Next(co, a));
+}
+ll ans(ll h)
+{
+	ll x = ST.minx(h);
+	if (x <= 1)
+		return 0;
+	ll hx = aukstis(x);
+	if (hx <= h)
+		return n;
+	auto it = co.find(x);
+	it--;
+	ll x_ = *it;
+	ll hx_ = aukstis(x_);
+	// y=kx+b
+	ll k = (hx_ - hx) / (x_ - x);
+	assert(k != 0);
+	ll b = hx - k * x;
+	return (h - b) / k;
+}
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin.tie(NULL);
+	cout.tie(NULL);
+	cin >> n;
+	char x;
+	vector<query>Q;
+	set<ll>X;
+	X.insert(0);
+	X.insert(n);
+	while (cin >> x)
+	{
+		if (x == 'E')
+			break;
+		if (x == 'I')
+		{
+			ll a, b, D;
+			cin >> a >> b >> D;
+			a--;
+			Q.push_back(query(x, a, b, D));
+			X.insert(a);
+			X.insert(b);
+		}
+		if (x == 'Q')
+		{
+			ll h;
+			cin >> h;
+			Q.push_back(query(x, h));
+		}
+	}
+	vector<ll>A;
+	for (ll i : X)
+		A.push_back(i);
+	X.clear();
+	ST = medis(A, 0, (ll)A.size() - 1);
+	co.insert(0);
+	co.insert(n);
+	for (query a : Q)
+	{
+		if (a.t == 'I')
+			pridek(a.a, a.b, a.D);
+		else
+			cout << ans(a.a) << "\n";
+	}
+}
