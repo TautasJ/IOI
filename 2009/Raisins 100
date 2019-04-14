@@ -1,0 +1,63 @@
+/*input
+2 3
+2 7 5
+1 9 5
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+int main()
+{
+	ll n, m;
+	cin >> n >> m;
+	ll R[n + 1][m + 1];
+	for (ll i = 0; i <= n; i++)
+	{
+		for (ll j = 0; j <= m; j++)
+		{
+			R[i][j] = 0;
+		}
+	}
+	for (ll i = 1; i <= n; i++)
+	{
+		for (ll j = 1; j <= m; j++)
+		{
+			cin >> R[i][j];
+			R[i][j] += R[i - 1][j];
+			R[i][j] += R[i][j - 1];
+			R[i][j] -= R[i - 1][j - 1];
+		}
+	}
+
+	ll DP[n + 1][n + 1][m + 1][m + 1];
+	for (ll sz1 = 1; sz1 <= n; sz1++)
+	{
+		for (ll sz2 = 1; sz2 <= m; sz2++)
+		{
+			for (ll a = 1; a + sz1 - 1 <= n; a++)
+			{
+				for (ll b = 1; b + sz2 - 1 <= m; b++)
+				{
+					if (sz1 == 1 && sz2 == 1)
+					{
+						DP[a][a + sz1 - 1][b][b + sz2 - 1] = 0;
+						continue;
+					}
+					ll suma = R[a + sz1 - 1][b + sz2 - 1] - R[a - 1][b + sz2 - 1] - R[a + sz1 - 1][b - 1] + R[a - 1][b - 1];
+					ll mini = 1e17;
+					for (ll c = a; c < a + sz1 - 1; c++)
+					{
+						mini = min(mini, DP[a][c][b][b + sz2 - 1] + DP[c + 1][a + sz1 - 1][b][b + sz2 - 1]);
+					}
+					for (ll c = b; c < b + sz2 - 1; c++)
+					{
+						mini = min(mini, DP[a][a + sz1 - 1][b][c] + DP[a][a + sz1 - 1][c + 1][b + sz2 - 1]);
+					}
+					DP[a][a + sz1 - 1][b][b + sz2 - 1] = suma + mini;
+				}
+			}
+		}
+	}
+	cout << DP[1][n][1][m] << "\n";
+}
