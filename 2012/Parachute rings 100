@@ -1,0 +1,134 @@
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+struct DSU
+{
+	vector<int>pa;
+	DSU(int n = 1)
+	{
+		pa = vector<int>(n, -1);
+	}
+	int root(int i)
+	{
+		if (pa[i] < 0)
+			return i;
+		return pa[i] = root(pa[i]);
+	}
+	int size(int i)
+	{
+		return -pa[root(i)];
+	}
+	int merge(int a, int b)
+	{
+		a = root(a);
+		b = root(b);
+		if (a == b)
+			return 0;
+		pa[b] += pa[a];
+		pa[a] = b;
+		return 1;
+	}
+} B[4], A;
+int d[1000000];
+vector<int>adj[1000000];
+int D[4][1000000];
+int r[4];
+int ok[4];
+int ans;
+vector<pair<int, int>>merg;
+void Init(int N)
+{
+	ans = N;
+	B[0] = DSU(N);
+	B[1] = DSU(N);
+	B[2] = DSU(N);
+	B[3] = DSU(N);
+	A = DSU(N);
+}
+bool ciklas = false;
+void Link(int a, int b)
+{
+	if (ans == 0)
+		return;
+	if (r[0] + r[1] > 0)
+	{
+		for (int t = 0; t < 4; t++)
+		{
+			if (a == r[t] || b == r[t])
+				continue;
+			D[t][a]++;
+			D[t][b]++;
+			ok[t] &= (D[t][a] < 3);
+			ok[t] &= (D[t][b] < 3);
+			ok[t] &= B[t].merge(a, b);
+		}
+		ans = ok[0] + ok[1] + ok[2] + ok[3];
+		return;
+	}
+	merg.push_back({a, b});
+	d[a]++;
+	d[b]++;
+	if (d[a] < d[b])
+		swap(a, b);
+	adj[a].push_back(b);
+	adj[b].push_back(a);
+	if (d[a] == 3)
+	{
+		r[0] = a;
+		r[1] = adj[a][0];
+		r[2] = adj[a][1];
+		r[3] = adj[a][2];
+		ok[0] = ok[1] = ok[2] = ok[3] = 1;
+		for (int t = 0; t < 4; t++)
+		{
+			for (pair<int, int>i : merg)
+			{
+				if (i.first == r[t] || i.second == r[t])
+					continue;
+				D[t][i.first]++;
+				D[t][i.second]++;
+				ok[t] &= (D[t][i.first] < 3);
+				ok[t] &= (D[t][i.second] < 3);
+				ok[t] &= B[t].merge(i.first, i.second);
+			}
+		}
+		ans = ok[0] + ok[1] + ok[2] + ok[3];
+		return;
+	}
+	int x = A.merge(a, b);
+	if (x == 0)
+	{
+		if (ciklas == false)
+		{
+			ciklas = true;
+			ans = A.size(a);
+		}
+		else
+		{
+			ans = 0;
+		}
+	}
+}
+int CountCritical()
+{
+	return ans;
+}
+/*
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	Init(7);
+	cout << CountCritical() << endl;
+	Link(1, 2);
+	cout << CountCritical() << endl;
+	Link(0, 5);
+	cout << CountCritical() << endl;
+	Link(2, 0);
+	cout << CountCritical() << endl;
+	Link(3, 2);
+	cout << CountCritical() << endl;
+	Link(3, 5);
+	cout << CountCritical() << endl;
+	Link(4, 3);
+	cout << CountCritical() << endl;
+}/**/
