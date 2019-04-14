@@ -1,0 +1,165 @@
+/*input
+10 9 10
+6 7
+1 5
+8 0
+2 9
+9 4
+2 7
+8 5
+6 0
+3 4
+4 9 0 9
+8 1 8 9
+1 8 1 8
+8 3 5 5
+8 9 3 9
+0 1 0 2
+9 0 6 6
+1 7 1 8
+9 4 5 6
+9 5 0 9
+*/
+#include "werewolf.h"
+#include <bits/stdc++.h>
+using namespace std;
+struct DSU
+{
+	vector<int>pa;
+	vector<map<int, int>>t;
+	DSU(int N)
+	{
+		pa = vector<int>(N);
+		t = vector<map<int, int>>(N);
+		for (int i = 0; i < N; i++)
+		{
+			pa[i] = i;
+		}
+	}
+	int root(int i)
+	{
+		if (i == pa[i])
+			return i;
+		return pa[i] = root(pa[i]);
+	}
+	void merge(int a, int b)
+	{
+		a = root(a);
+		b = root(b);
+		if (a == b)
+			return;
+		if (t[a].size() > t[b].size())
+			swap(a, b);
+		pa[a] = b;
+		for (pair<int, int> i : t[a])
+		{
+			if (t[b].count(i.first))
+				t[b][i.first] = max(t[b][i.first], i.second);
+			else
+				t[b][i.first] = i.second;
+		}
+		t[a].clear();
+	}
+};
+vector<int> check_validity(int N, vector<int> X, vector<int> Y,
+                           vector<int> S, vector<int> E,
+                           vector<int> L, vector<int> R)
+{
+	int pa[N];
+	int sz[N];
+	int t[N];
+	for (int i = 0; i < N; i++)
+	{
+		pa[i] = i;
+		sz[i] = 1;
+		t[i] = N;
+	}
+	function<int(int)> root = [&](int i)->int
+	{
+		if (pa[i] == i)
+			return i;
+		return root(pa[i]);
+	};
+	auto merge = [&](int a, int b, int kada)->void
+	{
+		a = root(a);
+		b = root(b);
+		if (a == b)
+			return;
+		if (sz[a] > sz[b])
+			swap(a, b);
+		pa[a] = b;
+		sz[b] += sz[a];
+		t[a] = kada;
+	};
+	int M = X.size();
+	vector<int>pridedam[N];
+	vector<int>Rdedam[N];
+	for (int i = 0; i < M; i++)
+	{
+		pridedam[min(X[i], Y[i])].push_back(i);
+		Rdedam[max(X[i], Y[i])].push_back(i);
+	}
+	for (int i = N - 1; i >= 0; i--)
+	{
+		for (int j : pridedam[i])
+		{
+			merge(X[j], Y[j], i);
+		}
+	}
+	vector<int>atsakom[N];
+	int Q = S.size();
+	vector<int> A(Q, 0);
+	for (int i = 0; i < Q; i++)
+	{
+		while (pa[S[i]] != S[i] && t[S[i]] >= L[i])
+			S[i] = pa[S[i]];
+		atsakom[R[i]].push_back(i);
+	}
+	DSU dsu(N);
+	for (int r = 0; r < N; r++)
+	{
+		int time = N;
+		int x = r;
+		while (true)
+		{
+			int x_r = dsu.root(r);
+			if (dsu.t[x_r].count(x) == 0)
+				dsu.t[x_r][x] = time;
+			else
+				dsu.t[x_r][x] = max(dsu.t[x_r][x], time);
+			if (x == pa[x])
+				break;
+			time = min(time, t[x]);
+			x = pa[x];
+		}
+		for (int i : Rdedam[r])
+			dsu.merge(X[i], Y[i]);
+		for (int i : atsakom[r])
+		{
+			E[i] = dsu.root(E[i]);
+			if (dsu.t[E[i]].count(S[i]) && dsu.t[E[i]][S[i]] >= L[i])
+				A[i] = 1;
+		}
+	}
+	return A;
+}
+/*
+int main()
+{
+	assert(check_validity(6, {5, 1, 1, 3, 3, 5}, {1, 2, 3, 4, 0, 2},
+	{4, 4, 5}, {2, 2, 4}, {1, 2, 3}, {2, 2, 4}) == vector<int>({1, 0, 0}));
+	int N, M, Q;
+	cin >> N >> M >> Q;
+	vector<int>X(M), Y(M);
+	vector<int>S(Q), E(Q), L(Q), R(Q);
+	for (int i = 0; i < M; i++)
+		cin >> X[i] >> Y[i];
+	for (int i = 0; i < Q; i++)
+		cin >> S[i] >> E[i] >> L[i] >> R[i];
+	vector<int>ans = check_validity(N, X, Y, S, E, L, R);
+	for (int i : ans)
+		cout << i << " ";
+	cout << endl;
+	assert(ans == vector<int>({1, 1, 1, 0, 1, 1, 0, 1, 0, 1}));
+}/**/
