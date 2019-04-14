@@ -1,0 +1,55 @@
+/*input
+5
+8 3
+7 -7
+8 1
+-2 1
+6 -5
+*/
+#include <bits/stdc++.h>
+using namespace std;
+int main()
+{
+	int n;
+	cin >> n;
+	int x[n], y[n];
+	for (int i = 0; i < n; i++)
+	{
+		cin >> x[i] >> y[i];
+		x[i] += 1000;
+		y[i] += 1000;
+	}
+	int dx[2001];
+	int dy[2001];
+	for (int i = 0; i < 2001; i++)
+	{
+		dx[i] = dy[i] = abs(i - 1000);
+	}
+	int x_ = 1000;
+	int y_ = 1000;
+	for (int t = 0; t < n; t++)
+	{
+		int a = dx[x[t]];
+		int b = dy[y[t]];
+		for (int i = 0; i <= 2000; i++)
+		{
+			dx[i] += abs(y_ - y[t]);
+			dy[i] += abs(x_ - x[t]);
+		}
+		dy[y_] = min(dy[y_], a);
+		dx[x_] = min(dx[x_], b);
+		for (int i = 1; i <= 2000; i++)
+		{
+			dx[i] = min(dx[i], dx[i - 1] + 1);
+			dy[i] = min(dy[i], dy[i - 1] + 1);
+		}
+		for (int i = 1999; i >= 0; i--)
+		{
+			dx[i] = min(dx[i], dx[i + 1] + 1);
+			dy[i] = min(dy[i], dy[i + 1] + 1);
+		}
+		x_ = x[t];
+		y_ = y[t];
+	}
+	cout << min(*min_element(dx, dx + 2001), *min_element(dy, dy + 2001));
+}
