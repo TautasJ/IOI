@@ -1,0 +1,66 @@
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+int I[1000001];
+int pa[1000001][21];
+char A[1000001];
+int d[1000001];
+int t = 0;
+void Init()
+{
+
+}
+void TypeLetter(char L)
+{
+	A[t + 1] = L;
+	I[t + 1] = t + 1;
+	pa[I[t + 1]][0] = I[t];
+	for (int x = 1; x < 21; x++)
+	{
+		pa[I[t + 1]][x] = pa[pa[I[t + 1]][x - 1]][x - 1];
+	}
+	d[I[t + 1]] = d[I[t]] + 1;
+	t++;
+}
+
+void UndoCommands(int U)
+{
+	A[t + 1] = A[t - U];
+	I[t + 1] = I[t - U];
+	t++;
+}
+
+char GetLetter(int P)
+{
+	int i = I[t];
+	int k = d[i] - P - 1;
+	for (int t = 20; t >= 0; t--)
+	{
+		if (k - (1 << t) >= 0)
+		{
+			k -= (1 << t);
+			i = pa[i][t];
+		}
+	}
+	A[i] = A[i];
+	return A[i];
+}
+/*
+int main()
+{
+	Init();
+	TypeLetter('a');
+	TypeLetter('b');
+	cout << GetLetter(1) << endl;
+	TypeLetter('d');
+	UndoCommands(2);
+	UndoCommands(1);
+	cout << GetLetter(2) << endl;
+	TypeLetter('e');
+	UndoCommands(1);
+	UndoCommands(5);
+	TypeLetter('c');
+	cout << GetLetter(2) << endl;
+	UndoCommands(2);
+	cout << GetLetter(2) << endl;
+}*/
