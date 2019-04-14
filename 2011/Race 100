@@ -1,0 +1,134 @@
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+int best_path(int N, int K, int H[][2], int L[])
+{
+	multiset<int> G[K + 1];
+	int ans = N + 1;
+	vector<pair<int, int>>adj[N];
+	for (int i = 0; i < N - 1; i++)
+		for (int t : {0, 1})
+			adj[H[i][t]].push_back({H[i][1 - t], L[i]});
+	vector<bool> uzimta(N, false);
+	int sz[N];
+	function<void(int)>daryk = [&](int i)->void
+	{
+		if (uzimta[i])
+			return;
+		function<void(int, int)>dfs = [&](int i, int p)->void
+		{
+			if (uzimta[i])
+			{
+				sz[i] = 0;
+				return;
+			}
+			sz[i] = 1;
+			for (auto j : adj[i])
+			{
+				if (j.first == p)
+					continue;
+				dfs(j.first, i);
+				sz[i] += sz[j.first];
+			}
+		};
+		dfs(i, i);
+		int x = i;
+		int mxx = N + 1;
+		function<void(int, int)>dfs1 = [&](int a, int p)->void
+		{
+			if (uzimta[a])
+				return;
+			int mx = sz[i] - sz[a];
+			for (auto j : adj[a])
+			{
+				if (j.first == p)
+					continue;
+				dfs1(j.first, a);
+				mx = max(mx, sz[j.first]);
+			}
+			if (mx < mxx)
+			{
+				mxx = mx;
+				x = a;
+			}
+		};
+		dfs1(i, i);
+		uzimta[x] = true;
+		function<void(int, int, long long, int, int)>sudek = [&](int i, int p, long long d, int w, int d2)->void
+		{
+			if (uzimta[i])
+			{
+				return;
+			}
+			if (d <= K)
+			{
+				if (w == 1)
+					G[d].insert(d2);
+				else
+					G[d].erase(G[d].find(d2));
+			}
+			for (auto j : adj[i])
+			{
+				if (j.first == p)
+					continue;
+				sudek(j.first, i, d + j.second, w, d2 + 1);
+			}
+		};
+		function<void(int, int, long long, int)>tikrink = [&](int i, int p, long long d, int d2)->void
+		{
+			if (uzimta[i])
+				return;
+			if (d == K)
+				ans = min(ans, d2);
+			int D = K - d;
+			if (D >= 0 && D <= K && G[D].size() > 0)
+				ans = min(ans, d2 + (*G[D].begin()));
+			for (auto j : adj[i])
+			{
+				if (j.first == p)
+					continue;
+				tikrink(j.first, i, d + j.second, d2 + 1);
+			}
+		};
+		for (auto j : adj[x])
+		{
+			sudek(j.first, x, j.second, 1, 1);
+		}
+		for (auto j : adj[x])
+		{
+			sudek(j.first, x, j.second, -1, 1);
+			tikrink(j.first, x, j.second, 1);
+			sudek(j.first, x, j.second, 1, 1);
+		}
+		for (auto j : adj[x])
+		{
+			sudek(j.first, x, j.second, -1, 1);
+		}
+		for (auto j : adj[x])
+		{
+			daryk(j.first);
+		}
+	};
+	daryk(0);
+	if (K == 0)
+		ans = 0;
+	if (ans > N)
+		ans = -1;
+	return ans;
+}/*
+int main()
+{
+	int N = 4;
+	int K = 3;
+	int H[N - 1][2] = {
+		{0, 1},
+		{1, 2},
+		{1, 3}
+	};
+	int L[N - 1] = {
+		1,
+		2,
+		4
+	};
+	cout << best_path(N, K, H, L) << endl;
+}/**/
