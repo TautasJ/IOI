@@ -1,0 +1,57 @@
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+int besthub(int n, int L, int X[], ll B)
+{
+	ll mx = 0;
+	ll Y[n];
+	for (int i = 0; i < n; i++)
+		Y[i] = X[i];
+	for (int i = 1; i < n; i++)
+		Y[i] += Y[i - 1];
+	auto suma = [&](int l, int r)->ll
+	{
+		if (l > r)
+			return 0;
+		ll ret = Y[r];
+		if (l - 1 >= 0)
+			ret -= Y[l - 1];
+		return ret;
+	};
+	auto ans = [&](int l, int i, int r)->ll
+	{
+		return ll(i - l - (r - i)) * ll(X[i]) - suma(l, i - 1) + suma(i + 1, r);
+	};
+	int lo = 1;
+	int hi = n;
+	while (lo < hi)
+	{
+		int k = (lo + hi + 1) / 2;
+		bool ok = false;
+		int i = 0;
+		for (int l = 0; l + k - 1 < n; l++)
+		{
+			i = max(i, l);
+			int r = l + k - 1;
+			while (i + 1 <= r && ans(l, i + 1, r) <= ans(l, i, r))
+				i++;
+			if (ans(l, i, r) <= B)
+			{
+				ok = true;
+			}
+		}
+
+		if (ok)
+			lo = k;
+		else
+			hi = k - 1;
+	}
+	return lo;
+}
+/*
+int main()
+{
+	int X[] = {1, 2, 10, 12, 14};
+	cout << besthub(5, 20, X, 6) << "\n";
+}/**/
