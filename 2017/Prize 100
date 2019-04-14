@@ -1,0 +1,90 @@
+#include "prize.h"
+#include <bits/stdc++.h>
+using namespace std;
+map<int, vector<int>>ASK;
+map<int, set<int>>reiksmes;
+int klausiau = 0;
+int mxsuma = 0;
+int N;
+vector<int>query(int i)
+{
+	if (i < 0)
+		return{0, mxsuma};
+	if (i >= N)
+		return{mxsuma, 0};
+	if (ASK.count(i))
+		return ASK[i];
+	ASK[i] = ask(i);
+	klausiau++;
+	assert(klausiau <= 6200);
+	reiksmes[ASK[i][0] + ASK[i][1]].insert(i);
+	mxsuma = max(mxsuma, ASK[i][0] + ASK[i][1]);
+	return ASK[i];
+}
+int kairiau(int i)
+{
+	i++;
+	while (query(i)[0] + query(i)[1] != mxsuma)
+		i--;
+	return query(i)[0];
+}
+void bs(int l, int r, int kiekis, int kair)
+{
+	if (l > r || kiekis == 0)
+		return;
+	int i = (l + r) / 2;
+	if (query(i)[0] + query(i)[1] == mxsuma)
+	{
+		bs(l, i - 1, query(i)[0] - kair, kair);
+		bs(i + 1, r, kiekis - (query(i)[0] - kair), query(i)[0]);
+		return;
+	}
+	for (int j = i + 1; j <= r; j++)
+	{
+		if (query(j)[0] + query(j)[1] == mxsuma)
+		{
+			bs(l, i - 1, query(j)[0] - kair - (j - i), kair);
+			bs(j + 1, r, kiekis - (query(j)[0] - kair), query(j)[0]);
+			return;
+		}
+	}
+	for (int j = i - 1; j >= l; j--)
+	{
+		if (query(j)[0] + query(j)[1] == mxsuma)
+		{
+			bs(l, j - 1, query(j)[0] - kair, kair);
+			bs(i + 1, r, kiekis - (query(j)[0] - kair) - (i - j), query(j)[0] - (i - j));
+			return;
+		}
+	}
+}
+int find_best(int n)
+{
+	N = n;
+	if (n <= 5000)
+	{
+		for (int i = 0; i < n; i++)
+		{
+			if (query(i)[0] + query(i)[1] == 0)
+				return i;
+		}
+		return -1;
+	}
+	int dydis = 500;
+	for (int i = 0; i < n; i += dydis)
+		query(i);
+	while (klausiau < 500)
+		query(rand() % n);
+	for (int i = 0; i < n; i += dydis)
+	{
+		int l = i;
+		int r = min(l + dydis - 1, n);
+		bs(l, r, kairiau(r) - kairiau(l - 1), kairiau(l - 1));
+	}
+	return *reiksmes.begin()->second.begin();
+}
+/*
+int main()
+{
+
+}/**/
