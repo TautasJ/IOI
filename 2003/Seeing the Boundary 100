@@ -1,0 +1,124 @@
+/*input
+100 1
+60 50
+5
+70 40
+75 40
+80 40
+80 50
+70 60
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+struct point
+{
+	int x, y;
+	int i = 0;
+	int id = -1;
+	point()
+	{
+
+	}
+	point(int x, int y): x(x), y(y)
+	{
+
+	}
+	int ketv()const
+	{
+		if (x >= 0 && y >= 0)
+			return 0;
+		if (x <= 0 && y > 0)
+			return 1;
+		if (x <= 0 && y <= 0)
+			return 2;
+		return 3;
+	}
+};
+point operator-(const point &a, const point &b)
+{
+	return point(a.x - b.x, a.y - b.y);
+}
+ll operator*(const point &a, const point &b)
+{
+	return ll(a.x) * ll(b.y) - ll(a.y) * ll(b.x);
+}
+bool yra[505050];
+bool ats[2020202];
+int main()
+{
+	int N, R;
+	cin >> N >> R;
+	point A;
+	cin >> A.x >> A.y;
+	vector<pair<point, point>>L;
+	while (R--)
+	{
+		int p;
+		cin >> p;
+		point B[p];
+		for (int i = 0; i < p; i++)
+			cin >> B[i].x >> B[i].y;
+		for (int i = 0; i < p; i++)
+			L.push_back({B[i] - A, B[(i + 1) % p] - A});
+	}
+	vector<point>X;
+	int tim = 1;
+	for (pair<point, point> &i : L)
+	{
+		if (i.first * i.second < 0)
+			swap(i.first, i.second);
+		i.first.i = tim;
+		i.second.i = -tim;
+		tim++;
+		X.push_back(i.first);
+		X.push_back(i.second);
+	}
+	int timer = 0;
+	for (int i = 0; i < N; i++)
+	{
+		for (point x : {point(i, 0), point(N, i), point(i + 1, N), point(0, i + 1)})
+		{
+			x = x - A;
+			x.id = timer++;
+			ats[x.id] = true;
+			X.push_back(x);
+		}
+	}
+	sort(X.begin(), X.end(), [&](const point & a, const point & b)
+	{
+		if (a.ketv() != b.ketv())
+			return a.ketv() < b.ketv();
+		if ((a * b) != 0)
+			return ((a * b) > 0);
+		return a.i > b.i;
+	});
+	int dengia = 0;
+	for (int t = 0; t < 2; t++)
+		for (point i : X)
+		{
+			if (i.i == 0)
+			{
+				if (dengia != 0)
+					ats[i.id] = false;
+			}
+			else if (i.i > 0)
+			{
+				dengia++;
+				yra[i.i] = true;
+			}
+			else
+			{
+				if (yra[-i.i])
+				{
+					dengia--;
+					yra[-i.i] = false;
+				}
+			}
+		}
+	int ret = 0;
+	for (bool i : ats)
+		if (i)
+			ret++;
+	cout << ret << "\n";
+}
