@@ -1,0 +1,167 @@
+#include "seats.h"
+#include <bits/stdc++.h>
+using namespace std;
+int mn[4000009];
+int kiek[4000009];
+int lazy[4000009];
+void init(int i, int l, int r, int SUMA[])
+{
+	if (l < r)
+	{
+		init(2 * i, l, (l + r) / 2, SUMA);
+		init(2 * i + 1, (l + r) / 2 + 1, r, SUMA);
+		mn[i] = min(mn[2 * i], mn[2 * i + 1]);
+		kiek[i] = 0;
+		if (mn[2 * i] == mn[i])
+			kiek[i] += kiek[2 * i];
+		if (mn[2 * i + 1] == mn[i])
+			kiek[i] += kiek[2 * i + 1];
+	}
+	else
+	{
+		mn[i] = SUMA[l];
+		kiek[i] = 1;
+	}
+}
+inline void fix(int i, int l, int r)
+{
+	mn[i] += lazy[i];
+	if (l < r)
+	{
+		lazy[2 * i] += lazy[i];
+		lazy[2 * i + 1] += lazy[i];
+	}
+	lazy[i] = 0;
+}
+void add(int i, int x, int y, int w, int l, int r)
+{
+	if (x <= l && r <= y)
+	{
+		lazy[i] += w;
+		return fix(i, l, r);
+	}
+	fix(i, l, r);
+	if (r < x || y < l)
+		return;
+	add(2 * i, x, y, w, l, (l + r) / 2);
+	add(2 * i + 1, x, y, w, (l + r) / 2 + 1, r);
+	mn[i] = min(mn[2 * i], mn[2 * i + 1]);
+	kiek[i] = 0;
+	if (mn[2 * i] == mn[i])
+		kiek[i] += kiek[2 * i];
+	if (mn[2 * i + 1] == mn[i])
+		kiek[i] += kiek[2 * i + 1];
+}
+
+int **chart;
+vector<int>r;
+vector<int>c;
+void add(int x, int y, int w)
+{
+	int m[4] = {
+		chart[x][y], chart[x][y + 1],
+		chart[x + 1][y], chart[x + 1][y + 1]
+	};
+	if (m[0] > m[1])
+		swap(m[0], m[1]);
+	if (m[0] > m[2])
+		swap(m[0], m[2]);
+	if (m[0] > m[3])
+		swap(m[0], m[3]);
+	if (m[1] > m[2])
+		swap(m[1], m[2]);
+	if (m[1] > m[3])
+		swap(m[1], m[3]);
+	if (m[2] > m[3])
+		swap(m[2], m[3]);
+	add(1, m[0], m[1] - 1, w, 0, (int)r.size() - 1);
+	add(1, m[2], m[3] - 1, w, 0, (int)r.size() - 1);
+}
+void add1(int x, int y, int SUMA[])
+{
+	int m[4] = {
+		chart[x][y], chart[x][y + 1],
+		chart[x + 1][y], chart[x + 1][y + 1]
+	};
+	if (m[0] > m[1])
+		swap(m[0], m[1]);
+	if (m[0] > m[2])
+		swap(m[0], m[2]);
+	if (m[0] > m[3])
+		swap(m[0], m[3]);
+	if (m[1] > m[2])
+		swap(m[1], m[2]);
+	if (m[1] > m[3])
+		swap(m[1], m[3]);
+	if (m[2] > m[3])
+		swap(m[2], m[3]);
+	SUMA[m[0]]++;
+	SUMA[m[1]]--;
+	SUMA[m[2]]++;
+	SUMA[m[3]]--;
+}
+void give_initial_chart(int H, int W, std::vector<int> R, std::vector<int> C)
+{
+	int n = H * W;
+	r = R;
+	c = C;
+	for (int i = 0; i < n; i++)
+	{
+		r[i]++;
+		c[i]++;
+	}
+	chart = new int* [H + 2];
+	for (int i = 0; i <= H + 1; i++)
+	{
+		chart[i] = new int[W + 2];
+		fill_n(chart[i], W + 2, n + 10);
+	}
+	for (int i = 0; i < n; i++)
+	{
+		chart[r[i]][c[i]] = i;
+	}
+	int SUMA[n + 20];
+	fill_n(SUMA, n + 20, 0);
+	for (int x = 0; x <= H; x++)
+	{
+		for (int y = 0; y <= W; y++)
+		{
+			add1(x, y, SUMA);
+		}
+	}
+	for (int i = 1; i <= n; i++)
+		SUMA[i] += SUMA[i - 1];
+	init(1, 0, n - 1, SUMA);
+}
+
+int swap_seats(int a, int b)
+{
+	for (int dx = -1; dx <= 0; dx++)
+	{
+		for (int dy = -1; dy <= 0; dy++)
+		{
+			add(r[a] + dx, c[a] + dy, -1);
+			add(r[b] + dx, c[b] + dy, -1);
+		}
+	}
+	swap(r[a], r[b]);
+	swap(c[a], c[b]);
+	chart[r[a]][c[a]] = a;
+	chart[r[b]][c[b]] = b;
+	for (int dx = -1; dx <= 0; dx++)
+	{
+		for (int dy = -1; dy <= 0; dy++)
+		{
+			add(r[a] + dx, c[a] + dy, 1);
+			add(r[b] + dx, c[b] + dy, 1);
+		}
+	}
+	return kiek[1];
+}
+/*
+int main()
+{
+	give_initial_chart(2, 3, {0, 1, 1, 0, 0, 1}, {0, 0, 1, 1, 2, 2});
+	cout << swap_seats(0, 5) << endl;
+	cout << swap_seats(0, 5) << endl;
+}/**/
