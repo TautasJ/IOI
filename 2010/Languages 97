@@ -1,0 +1,118 @@
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+int kiek[56];
+int suma[56][65535];
+set<int>kalb;
+set<int>raid;
+vector<pair<int, vector<int>>>XX;
+set<int>skyrikliai;
+vector<vector<int>>split(vector<int>x)
+{
+	vector<vector<int>> ret;
+	vector<int>g;
+	for (int i : x)
+	{
+		if (skyrikliai.count(i) == 0)
+		{
+			g.push_back(i);
+		}
+		else if (!g.empty())
+		{
+			ret.push_back(g);
+			g.clear();
+		}
+	}
+	if (!g.empty())
+	{
+		ret.push_back(g);
+		g.clear();
+	}
+	return ret;
+}
+set<vector<int>>zodziai[56];
+void excerpt(int E[100])
+{
+	if (kalb.empty())
+	{
+		for (int c = 0; c < 100; c++)
+			raid.insert(E[c]);
+	}
+	{
+		set<int>nauj;
+		for (int c = 0; c < 100; c++)
+			if (raid.count(E[c]))
+				nauj.insert(E[c]);
+		raid = nauj;
+	}
+	vector<int>E_;
+	for (int c = 0; c < 100; c++)
+		E_.push_back(E[c]);
+	if (raid.size() <= 3)
+	{
+		if (skyrikliai.empty())
+			skyrikliai = raid;
+		while (!XX.empty())
+		{
+			int cor = XX.back().first;
+			for (vector<int> i : split(XX.back().second))
+				zodziai[cor].insert(i);
+			XX.pop_back();
+		}
+
+		pair<int, int>ret = { -100, 0};
+		for (int i = 0; i < 56; i++)
+		{
+			int kiek = 0;
+			for (vector<int>c : split(E_))
+				kiek += 7 * (int)zodziai[i].count(c);
+			for (int c = 0; c < 100; c++)
+			{
+				int j = E[c];
+				if (suma[i][j] > 0)
+					kiek++;
+			}
+			ret = max(ret, {kiek, i});
+		}
+		int correct = language(ret.second);
+		kalb.insert(correct);
+		for (int c = 0; c < 100; c++)
+		{
+			int j = E[c];
+			suma[correct][j]++;
+		}
+		kiek[correct]++;
+		XX.push_back({correct, E_});
+		return;
+	}
+	pair<int, int>ret = { -100, 0};
+	for (int i = 0; i < 56; i++)
+	{
+		int kiek = 0;
+		for (int c = 0; c < 100; c++)
+		{
+			int j = E[c];
+			if (suma[i][j] > 0)
+				kiek++;
+		}
+		ret = max(ret, {kiek, i});
+	}
+	int correct = language(ret.second);
+	kalb.insert(correct);
+	for (int c = 0; c < 100; c++)
+	{
+		int j = E[c];
+		suma[correct][j]++;
+	}
+	kiek[correct]++;
+	XX.push_back({correct, E_});
+}
+/*
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	int K[] = {1, 0, 2, 4};
+	int S[] = {1, 0, 0};
+	int E[] = {3, 1, 1};
+	cout << GetBestPosition(5, 3, 3, K, S, E) << "\n";
+}/**/
