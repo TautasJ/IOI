@@ -1,0 +1,184 @@
+/*input
+15
+1 1
+8 1
+4 2
+7 2
+2 3
+4 3
+6 3
+2 5
+4 5
+6 5
+4 6
+7 6
+1 8
+4 8
+8 8
+17
+1 2
+2 15
+15 14
+14 13
+13 1
+14 11
+11 12
+12 4
+4 3
+3 6
+6 5
+5 8
+8 9
+9 11
+9 10
+10 7
+7 6
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+struct DSU
+{
+	int* pa;
+	DSU(int n)
+	{
+		n += 30;
+		pa = new int[n];
+		for (int i = 0; i < n; i++)
+			pa[i] = i;
+	}
+	int root(int i)
+	{
+		if (pa[i] == i)
+			return i;
+		return pa[i] = root(pa[i]);
+	}
+	void merge(int a, int b)
+	{
+		pa[root(a)] = root(b);
+	}
+};
+int main()
+{
+	int n;
+	cin >> n;
+	int x[n + 1];
+	int y[n + 1];
+	for (int i = 1; i <= n; i++)
+		cin >> x[i] >> y[i];
+	int w;
+	cin >> w;
+	int a[w + 1], b[w + 1];
+	for (int i = 1; i <= w; i++)
+	{
+		cin >> a[i] >> b[i];
+		if (x[a[i]] > x[b[i]] || y[a[i]] > y[b[i]])
+			swap(a[i], b[i]);
+	}
+	DSU X(4 * n);
+	DSU Y(n);
+	vector<int>adj[4 * n + 30];
+	vector<int>kaimyn[n + 1];
+	for (int i = 1; i <= w; i++)
+	{
+		kaimyn[a[i]].push_back(b[i]);
+		kaimyn[b[i]].push_back(a[i]);
+		Y.merge(a[i], b[i]);
+		if (x[a[i]] == x[b[i]])
+		{
+			X.merge(4 * a[i] + 0, 4 * b[i] + 3);
+			X.merge(4 * a[i] + 1, 4 * b[i] + 2);
+		}
+		else
+		{
+			X.merge(4 * a[i] + 0, 4 * b[i] + 1);
+			X.merge(4 * a[i] + 3, 4 * b[i] + 2);
+		}
+	}
+	for (int i = 1; i <= n; i++)
+	{
+		set<int>xx, yy;
+		for (int j : kaimyn[i])
+		{
+			int dx = x[j] - x[i];
+			int dy = y[j] - y[i];
+			if (dx != 0)
+				xx.insert(dx / abs(dx));
+			if (dy != 0)
+				yy.insert(dy / abs(dy));
+		}
+		if (xx.count(1) == 0)
+			X.merge(4 * i + 0, 4 * i + 3);
+		if (xx.count(-1) == 0)
+			X.merge(4 * i + 1, 4 * i + 2);
+		if (yy.count(1) == 0)
+			X.merge(4 * i + 0, 4 * i + 1);
+		if (yy.count(-1) == 0)
+			X.merge(4 * i + 2, 4 * i + 3);
+	}
+	for (int i = 1; i <= w; i++)
+	{
+		if (x[a[i]] == x[b[i]])
+		{
+			adj[X.root(4 * a[i] + 0)].push_back(X.root(4 * a[i] + 1));
+			adj[X.root(4 * a[i] + 1)].push_back(X.root(4 * a[i] + 0));
+		}
+		else
+		{
+			adj[X.root(4 * a[i] + 3)].push_back(X.root(4 * a[i] + 0));
+			adj[X.root(4 * a[i] + 0)].push_back(X.root(4 * a[i] + 3));
+		}
+	}
+	int D[4 * n + 30];
+	fill_n(D, 4 * n + 30, 4 * n + 30);
+	vector<int>vaikai[n + 1];
+	for (int i = 1; i <= n; i++)
+	{
+		vaikai[Y.root(i)].push_back(i);
+	}
+	for (int i = 1; i <= n; i++)
+	{
+		if (Y.root(i) == i)
+		{
+			pair<int, int>mx = { -1, -1};
+			for (int j : vaikai[i])
+			{
+				mx = max(mx, {x[j], j});
+			}
+			queue<int>Q;
+			D[X.root(4 * mx.second)] = 0;
+			Q.push(X.root(4 * mx.second));
+			while (!Q.empty())
+			{
+				int a = Q.front();
+				Q.pop();
+				for (int b : adj[a])
+				{
+					if (D[b] > D[a] + 1)
+					{
+						D[b] = D[a] + 1;
+						Q.push(b);
+					}
+				}
+			}
+		}
+	}
+	vector<int>ans;
+	for (int i = 1; i <= w; i++)
+	{
+		if (x[a[i]] == x[b[i]])
+		{
+			if (D[X.root(4 * a[i] + 0)] == D[X.root(4 * a[i] + 1)])
+				ans.push_back(i);
+		}
+		else
+		{
+			if (D[X.root(4 * a[i] + 3)] == D[X.root(4 * a[i] + 0)])
+				ans.push_back(i);
+		}
+	}
+	cout << ans.size() << "\n";
+	for (int c : ans)
+		cout << c << "\n";
+}
