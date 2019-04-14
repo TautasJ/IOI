@@ -1,0 +1,178 @@
+/*input
+4 0
+0 2 3 1
+*/
+#include "books.h"
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+struct ciklas
+{
+	int l, r;
+};
+const ll INF = 3e15;
+struct DSU
+{
+	int* p;
+	int n;
+	DSU(int n): n(n)
+	{
+		p = new int[n];
+		for (int i = 0; i < n; i++)
+			p[i] = i;
+	}
+	int root(int i)
+	{
+		if (i == p[i])
+			return i;
+		return p[i] = root(p[i]);
+	}
+	void merge(int a, int b)
+	{
+		if (rand() % 2 == 0)
+			swap(a, b);
+		p[root(a)] = root(b);
+	}
+};
+ll minimum_walk(std::vector<int> p, int s)
+{
+	int n = p.size();
+	ll ans = 0;
+	for (int i = 0; i < n; i++)
+		ans += abs(i - p[i]);
+	vector<ciklas>CIK;
+	bool mark[n];
+	int nr[n];
+	fill_n(mark, n, false);
+	fill_n(nr, n, -1);
+	for (int i = 0; i < n; i++)
+	{
+		if (p[i] == i || mark[i])
+			continue;
+		int j = i;
+		ciklas a;
+		a.l = a.r = i;
+		do
+		{
+			a.r = max(a.r, j);
+			nr[j] = CIK.size();
+			mark[j] = true;
+			j = p[j];
+		}
+		while (j != i);
+		CIK.push_back(a);
+	}
+	set<int>extnd;
+	for (int i = 0; i < n; i++)
+		if (p[i] != i)
+			extnd.insert(i);
+	int l = s;
+	int r = s;
+	function<void()>extend;
+	extend = [&]()->void
+	{
+		auto it = extnd.lower_bound(l);
+		if (it == extnd.end() || (*it) > r)
+			return;
+		l = min(l, CIK[nr[*it]].l);
+		r = max(r, CIK[nr[*it]].r);
+		extnd.erase(it);
+		extend();
+	};
+	while (true)
+	{
+		extend();
+		ll atsak = INF;
+		ll s2 = 0;
+		ll s1 = 0;
+		int nuo = l;
+		int iki = r;
+		for (int i = r + 1; i < n; i++)
+		{
+			if (nr[i] == -1)
+				continue;
+			if (CIK[nr[i]].l <= s)
+			{
+				s2 += 2 * max(0, i - iki);
+				atsak = min(atsak, s2);
+				iki = max(iki, CIK[nr[i]].r);
+				break;
+			}
+			if (CIK[nr[i]].l <= iki)
+			{
+				iki = max(iki, CIK[nr[i]].r);
+				continue;
+			}
+			s2 += 2 * (CIK[nr[i]].l - iki);
+			iki = CIK[nr[i]].r;
+		}
+		for (int i = l - 1; i >= 0; i--)
+		{
+			if (nr[i] == -1)
+				continue;
+			if (CIK[nr[i]].r >= s)
+			{
+				s1 += 2 * max(0, nuo - i);
+				atsak = min(atsak, s1);
+				nuo = min(nuo, CIK[nr[i]].l);
+				break;
+			}
+			if (CIK[nr[i]].r >= nuo)
+			{
+				nuo = min(nuo, CIK[nr[i]].l);
+				continue;
+			}
+			s1 += 2 * (nuo - CIK[nr[i]].r);
+			nuo = CIK[nr[i]].l;
+		}
+		if (s1 + s2 == 0)
+			break;
+		if (l == nuo && r == iki)
+			break;
+		if (atsak < INF)
+		{
+			l = nuo;
+			r = iki;
+			ans += atsak;
+		}
+		else
+		{
+			l = nuo;
+			r = iki;
+			ans += s1;
+			ans += s2;
+		}
+	}
+
+	return ans;
+}
+/*
+int main()
+{
+	int n, s;
+	assert(2 == scanf("%d %d", &n, &s));
+
+	vector<int> p((unsigned) n);
+	for (int i = 0; i < n; i++)
+		assert(1 == scanf("%d", &p[(unsigned) i]));
+
+	long long res = minimum_walk(p, s);
+	printf("%lld\n", res);
+
+	return 0;
+}
+/**/
+/*
+int main()
+{
+	srand(156);
+	int n = 1000;
+	vector<int>p(n);
+	for (int i = 0; i < n; i++)
+		p[i] = i;
+	random_shuffle(p.begin(), p.end());
+	int s = 0;
+	cout << minimum_walkFast(p, s) << endl;
+	cout << 339102 << endl;
+}
+/**/
