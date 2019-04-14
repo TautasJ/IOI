@@ -1,0 +1,78 @@
+/*input
+4 15 17
+6 8 8 7
+*/
+#include "molecules.h"
+#include <bits/stdc++.h>
+using namespace std;
+std::vector<int> find_subset(int l, int u, std::vector<int> w)
+{
+	int a = u - l;
+	int n = w.size();
+	vector<int>v(n);
+	for (int i = 0; i < n; i++)
+		v[i] = i;
+	sort(v.begin(), v.end(), [&](int a, int b) {return w[a] < w[b];});
+	long long w_mn = *min_element(w.begin(), w.end());
+	vector<int>x(n);
+	for (int i = 0; i < n; i++)
+		x[i] = w[i] - w_mn;
+	vector<long long>suma;
+	suma.push_back(0);
+	for (int i = 0; i < n; i++)
+		suma.push_back(suma.back() + x[v[i]]);
+	for (long long k = 1; k <= n; k++)
+	{
+		long long mini = w_mn * k + suma[k];
+		long long maxi = w_mn * k + suma[n] - suma[n - k];
+		if (mini < l && maxi < l)
+			continue;
+		if (mini > u && maxi > u)
+			continue;
+		if (u <= mini && mini <= l)
+		{
+			vector<int>ans;
+			for (int i = 0; i < k; i++)
+				ans.push_back(v[i]);
+			return ans;
+		}
+		if (u <= maxi && maxi <= l)
+		{
+			vector<int>ans;
+			for (int i = n - 1; i >= n - k; i--)
+				ans.push_back(v[i]);
+			return ans;
+		}
+		long long suma = 0;
+		int j = k;
+		int t = 0;
+		for (int i = 0; i < k; i++)
+			suma += w[v[i]];
+		while (suma < l)
+		{
+			suma -= w[v[t]];
+			suma += w[v[j]];
+			t++;
+			j++;
+		}
+		vector<int>ans;
+		for (int i = t; i < j; i++)
+			ans.push_back(v[i]);
+		return ans;
+	}
+	return {};
+}/*
+int main() {
+	int n, l, u;
+	assert(3 == scanf("%d %d %d", &n, &l, &u));
+	std::vector<int> w(n);
+	for (int i = 0; i < n; i++)
+		assert(1 == scanf("%d", &w[i]));
+	std::vector<int> result = find_subset(l, u, w);
+
+
+	printf("%d\n", (int)result.size());
+	for (int i = 0; i < (int)result.size(); i++)
+		printf("%d%c", result[i], " \n"[i == (int)result.size() - 1]);
+}
+/**/
