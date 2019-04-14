@@ -1,0 +1,43 @@
+/*input
+
+*/
+#include <bits/stdc++.h>
+#include "grader.h"
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+int LocateCentre(int N, int P[], int S[], int D[])
+{
+	vector<int>adj[N];
+	for (int i = 0; i < N - 1; i++)
+	{
+		adj[S[i]].push_back(D[i]);
+		adj[D[i]].push_back(S[i]);
+	}
+	ll suma = accumulate(P, P + N, 0ll);
+	pair<ll, int>geriaus = {suma * 2, -1};
+	function<ll(int, int)> dfs;
+	dfs = [&](int i, int p)->ll
+	{
+		ll ret = P[i];
+		ll kiek = 0;
+		for (int j : adj[i])
+		{
+			if (j == p)
+				continue;
+			ll k = dfs(j, i);
+			ret += k;
+			kiek = max(kiek, k);
+		}
+		kiek = max(kiek, suma - ret);
+		geriaus = min(geriaus, {kiek, i});
+		return ret;
+	};
+	int root = rand() % N;
+	dfs(root, root);
+	return geriaus.second;
+}/*
+int main()
+{
+
+}/**/
