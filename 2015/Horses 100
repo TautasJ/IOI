@@ -1,0 +1,175 @@
+#include "horses.h"
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+const ll modulo = 1000000007;
+struct ST
+{
+	int l, r;
+	ST *left;
+	ST *right;
+	ll mx = 0;
+	ll sand = 1;
+	ld sandd = 1;
+	ST(int l, int r, int X[], int Y[]): l(l), r(r)
+	{
+		if (l < r)
+		{
+			left = new ST(l, (l + r) / 2, X, Y);
+			right = new ST((l + r) / 2 + 1, r, X, Y);
+			mx = max(left->mx, right->mx);
+			sand = (left->sand * right->sand) % modulo;
+			sandd = (left->sandd * right->sandd);
+		}
+		else
+		{
+			mx = Y[l];
+			sand = X[l];
+			sandd = X[l];
+		}
+	};
+	ll maximum(int a, int b)
+	{
+		if (a <= l && r <= b)
+		{
+			return mx;
+		}
+		if (b < l || r < a)
+		{
+			return -9;
+		}
+		return max(left->maximum(a, b), right->maximum(a, b));
+	}
+	ll product(int a, int b)
+	{
+		if (a <= l && r <= b)
+			return sand;
+		if (b < l || r < a)
+			return 1;
+		return (left->product(a, b) * right->product(a, b)) % modulo;
+	}
+	ld productd(int a, int b)
+	{
+		if (a <= l && r <= b)
+			return sandd;
+		if (b < l || r < a)
+			return 1;
+		return (left->productd(a, b) * right->productd(a, b));
+	}
+	void updateX(int i, int val)
+	{
+		if (l <= i && i <= r)
+		{
+			if (l == r)
+			{
+				sand = val;
+				sandd = val;
+			}
+			else
+			{
+				left->updateX(i, val);
+				right->updateX(i, val);
+				sand = (left->sand * right->sand) % modulo;
+				sandd = (left->sandd * right->sandd);
+			}
+		}
+	}
+	void updateY(int i, int val)
+	{
+		if (l <= i && i <= r)
+		{
+			if (l == r)
+			{
+				mx = val;
+			}
+			else
+			{
+				left->updateY(i, val);
+				right->updateY(i, val);
+				mx = max(left->mx, right->mx);
+			}
+		}
+	}
+};
+ST *MEDIS;
+set<int>Ne1;
+int n;
+ll kiekis(ll x)
+{
+	return (MEDIS->product(0, x) * ll(MEDIS->maximum(x, n - 1))) % modulo;
+}
+struct GGG
+{
+	int x;
+};
+bool operator<(GGG A, GGG B)
+{
+	int a = min(A.x, B.x);
+	return MEDIS->productd(a, A.x) * ld(MEDIS->maximum(A.x, n - 1)) < MEDIS->productd(a, B.x) * ld(MEDIS->maximum(B.x, n - 1));
+}
+ll Xc[500000];
+ll answer()
+{
+	GGG ans;
+	Ne1.insert(0);
+	ans.x = *(--Ne1.end());
+	int kiek = 32;
+	ll sandauga = 1;
+	bool gerai = true;
+	for (auto it = Ne1.end(); kiek > 0; kiek--)
+	{
+		if (it == Ne1.begin())
+			break;
+		it--;
+		GGG A;
+		A.x = *it;
+		sandauga *= Xc[A.x];
+		ans = max(ans, A);
+		if (sandauga > 3000000000)
+		{
+			gerai = false;
+			break;
+		}
+	}
+	return kiekis(ans.x);
+}
+int init(int N, int X[], int Y[])
+{
+	n = N;
+	MEDIS = new ST(0, N - 1, X, Y);
+	for (int i = 0; i < N; i++)
+	{
+		Xc[i] = X[i];
+		if (X[i] != 1)
+			Ne1.insert(i);
+	}
+	return answer();
+}
+
+int updateX(int pos, int val)
+{
+	Xc[pos] = val;
+	MEDIS->updateX(pos, val);
+	if (val == 1)
+		Ne1.erase(pos);
+	else
+		Ne1.insert(pos);
+	return answer();
+}
+
+int updateY(int pos, int val)
+{
+	MEDIS->updateY(pos, val);
+	return answer();
+}
+/*
+int main()
+{
+	int N = 8;
+	int X[N] = {1, 1, 1, 1, 1, 1, 1, 1};
+	int Y[N] = {1, 1, 1, 1, 1, 1, 1, 1};
+	init(N, X, Y);
+	cout << updateX(1, 1) << "\n";
+	cout << MEDIS->maximum(0, 7) << "\n";
+}/**/
