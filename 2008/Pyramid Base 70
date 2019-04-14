@@ -1,0 +1,106 @@
+/*input
+13 5
+0
+8
+8 4 10 4 1
+4 3 4 4 1
+10 2 12 2 2
+8 2 8 4 3
+2 4 6 4 5
+10 3 10 4 8
+12 3 12 4 13
+2 2 4 2 21
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+int N, B, M, P;
+int X1[404040], X2[404040], Y1[404040], Y2[404040], C[404040];
+struct aaa
+{
+	int mn;
+	int lazy;
+} med[4040404];
+void init(int i, int l, int r)
+{
+	med[i].mn = med[i].lazy = 0;
+	if (l < r)
+	{
+		int m = (l + r) / 2;
+		init(2 * i, l, m);
+		init(2 * i + 1, m + 1, r);
+	}
+}
+void fix(int i, int l, int r)
+{
+	med[i].mn += med[i].lazy;
+	if (l < r)
+	{
+		med[2 * i].lazy += med[i].lazy;
+		med[2 * i + 1].lazy += med[i].lazy;
+	}
+	med[i].lazy = 0;
+}
+void add(int i, int l, int r, int x, int y, int c)
+{
+	if (x <= l && r <= y)
+	{
+		med[i].lazy += c;
+		return fix(i, l, r);
+	}
+	fix(i, l, r);
+	if (r < x || y < l)
+		return;
+	int m = (l + r) / 2;
+	add(2 * i, l, m, x, y, c);
+	add(2 * i + 1, m + 1, r, x, y, c);
+	med[i].mn = min(med[2 * i].mn, med[2 * i + 1].mn);
+}
+vector<int>U[1000000 + 2];
+bool check(int sz)
+{
+	if (sz > N || sz > M)
+		return false;
+	init(1, sz, M);
+	for (int i = 1; i <= P; i++)
+	{
+		int x1 = max(sz, X1[i]);
+		int x2 = min(N, X2[i] + sz - 1);
+		if (x1 <= x2)
+		{
+			U[x1].push_back(i);
+			U[x2 + 1].push_back(-i);
+		}
+	}
+	bool ret = false;
+	for (int x = sz; x <= N; x++)
+	{
+		for (int i : U[x])
+		{
+			int j = abs(i);
+			int y1 = Y1[j];
+			int y2 = Y2[j] + sz - 1;
+			add(1, sz, M, y1, y2, (i / j) * C[j]);
+		}
+		U[x].clear();
+		if (med[1].mn <= B)
+			ret = true;
+	}
+	U[N + 1].clear();
+	return ret;
+}
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	cin >> N >> M >> B;
+	cin >> P;
+	for (int i = 1; i <= P; i++)
+		cin >> X1[i] >> Y1[i] >> X2[i] >> Y2[i] >> C[i];
+	int ans = 0;
+	for (int x = (1ll << 20); x > 0; x /= 2)
+	{
+		if (check(ans + x))
+			ans += x;
+	}
+	cout << ans << "\n";
+}
