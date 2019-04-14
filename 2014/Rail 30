@@ -1,0 +1,121 @@
+#include "grader.h"
+
+#include <bits/stdc++.h>
+using namespace std;
+map<pair<int, int>, int>X;
+int dist(int a, int b)
+{
+	if (a > b)
+		swap(a, b);
+	if (X.count({a, b}))
+		return X[ {a, b}];
+	return X[ {a, b}] = getDistance(a, b);
+}
+const int INF = 1e8;
+void findLocation(int N, int first, int location[], int stype[])
+{	/*
+	1 1
+	2 4
+	2 7
+	2 9*/
+
+	int s = 0;
+	stype[s] = 1;
+	location[s] = first;
+	if (N == 1)
+		return;
+
+	pair<int, int>G = {INF, -1};
+	for (int i = 1; i < N; i++)
+	{
+		G = min(G, {dist(s, i), i});
+	}
+	int a = G.second;
+	stype[a] = 2;
+	location[a] = first + G.first;
+	vector<int> x = {a};
+	vector<int> y = {s};
+	vector<int>kair;
+	vector<int>desn;
+	for (int i = 0; i < N; i++)
+	{
+		if (i == s || i == a)
+			continue;
+		if (dist(a, i) < dist(s, a) && dist(s, i) == dist(s, a) + dist(a, i))
+		{
+			stype[i] = 1;
+			location[i] = location[a] - dist(a, i);
+			y.push_back(i);
+		}
+	}
+	sort(y.begin(), y.end(), [&](int z, int t) {return location[z] < location[t];});
+	for (int i = 0; i < N; i++)
+	{
+		if (i == s || i == a)
+			continue;
+		if (dist(a, i) < dist(s, a) && dist(s, i) == dist(s, a) + dist(a, i))
+		{	;
+		}
+		else if (dist(y.back(), i) < dist(a, i))
+			desn.push_back(i);
+		else
+			kair.push_back(i);
+	}
+
+	sort(kair.begin(), kair.end(), [&](int x, int y) {return dist(s, x) < dist(s, y);});
+	sort(desn.begin(), desn.end(), [&](int x, int y) {return dist(a, x) < dist(a, y);});
+	for (int i : desn)
+	{
+		int k = x.back();
+		int p;
+		for (int j = y.size() - 1; j >= 0; j--)
+		{
+			if (location[y[j]] <= location[k])
+				p = y[j];
+		}
+		int A = dist(k, i);
+		int gal1 = location[k] - A;
+		int gal2 = location[k] + A - 2 * abs(location[k] - location[p]);
+		if (gal2 - location[s]  == dist(s, i))
+		{
+			stype[i] = 2;
+			location[i] = gal2;
+			x.push_back(i);
+		}
+		else
+		{
+			stype[i] = 1;
+			location[i] = gal1;
+			y.push_back(i);
+			sort(y.begin(), y.end(), [&](int z, int t) {return location[z] < location[t];});
+		}
+	}
+	x = {s};
+	y = {a};
+	for (int i : kair)
+	{
+		int k = x.back();
+		int p;
+		for (int j = y.size() - 1; j >= 0; j--)
+		{
+			if (location[y[j]] >= location[k])
+				p = y[j];
+		}
+		int A = dist(k, i);
+		int gal1 = location[k] + A;
+		int gal2 = location[k] - A + 2 * abs(location[k] - location[p]);
+		if ((location[a] - gal2) == dist(a, i))
+		{
+			stype[i] = 1;
+			location[i] = gal2;
+			x.push_back(i);
+		}
+		else
+		{
+			stype[i] = 2;
+			location[i] = gal1;
+			y.push_back(i);
+			sort(y.begin(), y.end(), [&](int z, int t) {return location[z] > location[t];});
+		}
+	}
+}
