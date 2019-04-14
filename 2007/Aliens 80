@@ -1,0 +1,122 @@
+/*input
+19 7 4
+true
+false
+false
+true
+true
+false
+false
+true
+true
+false
+false
+true
+true
+false
+false
+true
+true
+false
+false
+true
+true
+false
+false
+true
+true
+false
+false
+true
+true
+false
+false
+true
+true
+false
+false
+true
+true
+false
+false
+true
+true
+false
+false
+true
+true
+false
+false
+true
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+ll n;
+ll xa, xb, ya, yb;
+ll kiekis = 0;
+set<pair<ll, ll>>JAU;
+bool yra(ll x, ll y)
+{
+	if (JAU.count({x, y}))
+		return false;
+	JAU.insert({x, y});
+	if (x <= 0 || x > n || y <= 0 || y > n)
+		return false;
+	cout << "examine " << x << " " << y << endl;
+	string s;
+	cin >> s;
+	if (s == "true")
+	{
+		xa = min(xa, x);
+		ya = min(ya, y);
+		xb = max(xb, x);
+		yb = max(yb, y);
+	}
+	kiekis++;
+	if (kiekis == 300)
+	{
+		cout << "solution" << " " << (xa + xb) / 2 << " " << (ya + yb) / 2 << endl;
+		exit(0);
+	}
+	return (s == "true");
+}
+int main()
+{
+	ll x0, y0;
+	cin >> n >> x0 >> y0;
+	xa = x0;
+	xb = x0;
+	ya = y0;
+	yb = y0;
+	vector<ll>p2 = {1};
+	while (2 * p2.back() <= n)
+		p2.push_back(2 * p2.back());
+	reverse(p2.begin(), p2.end());
+	bool ok = true;
+	while (ok)
+	{
+		ok = false;
+		for (ll d : p2)
+		{
+			if (yra(xb + d, yb))
+				ok = true;
+			if (yra(xb, yb + d))
+				ok = true;
+			if (yra(xa - d, ya))
+				ok = true;
+			if (yra(xa, ya - d))
+				ok = true;
+		}
+		if (yra(xa - 1, ya - 1))
+			ok = true;
+		if (yra(xb + 1, yb + 1))
+			ok = true;
+		if (yra(xa - 1, yb + 1))
+			ok = true;
+		if (yra(xb + 1, ya - 1))
+			ok = true;
+	}
+	cout << "solution" << " " << (xa + xb) / 2 << " " << (ya + yb) / 2 << endl;
+}
