@@ -1,0 +1,130 @@
+/*input
+7 3
+TTTTTTT
+TGGGGGT
+TGGGGGT
+MGGGGGD
+TGGGGGT
+TGGGGGT
+THHHHHT
+
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+const ll dx[4] = {0, 0, 1, -1};
+const ll dy[4] = {1, -1, 0, 0};
+ll ceil(ll x, ll y)
+{
+	if (x % y == 0)
+		return x / y;
+	return x / y + 1;
+}
+char Map[800 + 2][800 + 2];
+ll Bites[800 + 2][800 + 2];
+ll D[800 + 2][800 + 2];
+ll N, S;
+pair<ll, ll>Honey;
+pair<ll, ll>Home;
+ll check(ll k)
+{
+	for (ll i = 0; i < N + 2; i++)
+		for (ll j = 0; j < N + 2; j++)
+			D[i][j] = -1;
+	queue<pair<ll, ll>>Q;
+	Q.push(Honey);
+	D[Honey.first][Honey.second] = k * S;
+	while (!Q.empty())
+	{
+		ll x = Q.front().first;
+		ll y = Q.front().second;
+		Q.pop();
+		for (ll t = 0; t < 4; t++)
+		{
+			if (Map[x + dx[t]][y + dy[t]] != 'T')
+			{
+				if ((Bites[x + dx[t]][y + dy[t]] == -1) || ceil(D[x][y] + 1, S) <= Bites[x + dx[t]][y + dy[t]])
+				{
+					if (ceil(D[x][y] + 1, S) == ceil(D[x][y], S))
+					{
+						if (D[x + dx[t]][y + dy[t]] == -1 || D[x + dx[t]][y + dy[t]] > D[x][y] + 1)
+						{
+							D[x + dx[t]][y + dy[t]] = D[x][y] + 1;
+							Q.push({x + dx[t], y + dy[t]});
+						}
+					}
+					else if (Bites[x][y] == -1 || ceil(D[x][y], S) + 1 <= Bites[x][y])
+					{
+						if (D[x + dx[t]][y + dy[t]] == -1 || D[x + dx[t]][y + dy[t]] > D[x][y] + 1)
+						{
+							D[x + dx[t]][y + dy[t]] = D[x][y] + 1;
+							Q.push({x + dx[t], y + dy[t]});
+						}
+					}
+				}
+			}
+		}
+	}
+	return D[Home.first][Home.second] != -1;
+};
+int main()
+{
+	ios_base::sync_with_stdio(false), cin.tie(0), cout.tie(0), cerr.tie(0);
+	cin >> N >> S;
+	for (ll i = 0; i < N + 2; i++)
+		for (ll j = 0; j < N + 2; j++)
+		{
+			Map[i][j] = 'T';
+			Bites[i][j] = -1;
+		}
+	queue<pair<ll, ll>>Q;
+	for (ll i = 1; i <= N; i++)
+	{
+		for (ll j = 1; j <= N; j++)
+		{
+			cin >> Map[i][j];
+			if (Map[i][j] == 'M')
+				Honey = {i, j};
+			if (Map[i][j] == 'D')
+				Home = {i, j};
+			if (Map[i][j] == 'H')
+			{
+				Bites[i][j] = 0;
+				Q.push({i, j});
+			}
+		}
+	}
+	while (!Q.empty())
+	{
+		ll x = Q.front().first;
+		ll y = Q.front().second;
+		Q.pop();
+		for (ll t = 0; t < 4; t++)
+		{
+			if (Map[x + dx[t]][y + dy[t]] == 'G' || Map[x + dx[t]][y + dy[t]] == 'M')
+			{
+				if (Bites[x + dx[t]][y + dy[t]] == -1 || Bites[x + dx[t]][y + dy[t]] > Bites[x][y] + 1)
+				{
+					Bites[x + dx[t]][y + dy[t]] = Bites[x][y] + 1;
+					Q.push({x + dx[t], y + dy[t]});
+				}
+			}
+		}
+	}
+	ll lo = 0;
+	ll hi = Bites[Honey.first][Honey.second] - 1;
+	while (lo < hi)
+	{
+		ll m = (lo + hi + 1) / 2;
+		if (check(m))
+			lo = m;
+		else
+			hi = m - 1;
+	}
+	ll m = (lo + hi) / 2;
+	if (check(m))
+		cout << m << "\n";
+	else
+		cout << "-1\n";
+}
