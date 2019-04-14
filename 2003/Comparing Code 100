@@ -1,0 +1,181 @@
+/*input
+4 3
+RA = RB + RC
+RC = D + RE
+RF = RF + RJ
+RE = RF + RF
+HD = HE + HF
+HM = HN + D
+HN = HA + HB
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+ll H1[1010][1010];
+ll A[1010][3];
+ll B[1010][3];
+map<string, ll>X;
+ll Kada[1010 + 1010 + 10];
+ll RND[1010 * 3 + 10][3];
+ll H2[1010][1010];
+int main()
+{
+	srand(2015);
+	ll R, H;
+	cin >> R >> H;
+	ll lo = 1;
+	ll hi = min(R, H);
+	for (ll i = 0; i < R; i++)
+	{
+		string a;
+		cin >> a;
+		if (X.count(a) == 0)
+			X[a] = X.size();
+		A[i][0] = X[a];
+		cin >> a;
+		cin >> a;
+		if (X.count(a) == 0)
+			X[a] = X.size();
+		A[i][1] = X[a];
+		cin >> a;
+		cin >> a;
+		if (X.count(a) == 0)
+			X[a] = X.size();
+		A[i][2] = X[a];
+	}
+	X.clear();
+	for (ll i = 0; i < H; i++)
+	{
+		string a;
+		cin >> a;
+		if (X.count(a) == 0)
+			X[a] = X.size();
+		B[i][0] = X[a];
+		cin >> a;
+		cin >> a;
+		if (X.count(a) == 0)
+			X[a] = X.size();
+		B[i][1] = X[a];
+		cin >> a;
+		cin >> a;
+		if (X.count(a) == 0)
+			X[a] = X.size();
+		B[i][2] = X[a];
+	}
+	X.clear();
+	fill_n(Kada, R + H + 10, -1);
+	for (ll i = 0; i < (max(R, H) * 3 + 10); i++)
+	{
+		for (int t = 0; t < 3; t++)
+		{
+			RND[i][t] = (ll(rand()) + ll(rand()) * RAND_MAX) % 1000000007;
+		}
+	}
+	for (ll l = 0; l < R; l++)
+	{
+		ll HH = 0;
+		for (ll r = l; r < R; r++)
+		{
+			for (ll t = 0; t < 3; t++)
+				if (Kada[A[r][t]] == -1)
+				{
+					Kada[A[r][t]] = (r - l) * 3;
+					if (t > 0)
+						Kada[A[r][t]]++;
+				}
+			HH += RND[r - l][0] * RND[Kada[A[r][0]]][2];
+			HH %= 1000000007;
+			HH += RND[r - l][1] * RND[Kada[A[r][1]]][2];
+			HH %= 1000000007;
+			HH += RND[r - l][1] * RND[Kada[A[r][2]]][2];
+			HH %= 1000000007;
+			H1[l][r] = HH;
+		}
+		for (ll r = l; r < R; r++)
+			Kada[A[r][0]] = Kada[A[r][1]] = Kada[A[r][2]] = -1;
+	}
+	for (ll l = 0; l < H; l++)
+	{
+		ll HH = 0;
+		ll HH1 = 0;
+		for (ll r = l; r < H; r++)
+		{
+			for (ll t = 0; t < 3; t++)
+				if (Kada[B[r][t]] == -1)
+				{
+					Kada[B[r][t]] = (r - l) * 3;
+					if (t > 0)
+						Kada[B[r][t]]++;
+				}
+			HH += RND[r - l][0] * RND[Kada[B[r][0]]][2];
+			HH %= 1000000007;
+			HH += RND[r - l][1] * RND[Kada[B[r][1]]][2];
+			HH %= 1000000007;
+			HH += RND[r - l][1] * RND[Kada[B[r][2]]][2];
+			HH %= 1000000007;
+			H2[l][r] = HH;
+		}
+		for (ll r = l; r < H; r++)
+		{
+			Kada[B[r][0]] = Kada[B[r][1]] = Kada[B[r][2]] = -1;
+		}
+	}
+	auto check = [&](int a, int b)->bool
+	{
+		int sz = b - a + 1;
+		for (ll l = 0; l + sz - 1 < R; l++)
+		{
+			int Kada1[H + R + 10];
+			int Kada2[H + R + 10];
+			for (int i = 0; i < sz; i++)
+			{
+				Kada1[A[l + i][0]] = i * 2;
+				Kada1[A[l + i][1]] = i * 2 + 1;
+				Kada1[A[l + i][2]] = i * 2 + 1;
+			}
+			for (int i = 0; i < sz; i++)
+			{
+				Kada2[B[a + i][0]] = i * 2;
+				Kada2[B[a + i][1]] = i * 2 + 1;
+				Kada2[B[a + i][2]] = i * 2 + 1;
+			}
+			bool ok = true;
+			for (int i = 0; i < sz; i++)
+			{
+				if (Kada1[A[l + i][0]] != Kada2[B[a + i][0]])
+					ok = false;
+				pair<int, int>b = {Kada2[B[a + i][1]], Kada2[B[a + i][2]]};
+				pair<int, int>a = {Kada1[A[l + i][1]], Kada1[A[l + i][2]]};
+				if (a.first < a.second)
+					swap(a.first, a.second);
+				if (b.first < b.second)
+					swap(b.first, b.second);
+				if (a != b)
+					ok = false;
+			}
+			if (ok)
+				return true;
+		}
+		return false;
+	};
+	for (ll sz = min(R, H); sz > 0; sz--)
+	{
+		set<ll>HH;
+		for (ll l = 0; l + sz - 1 < R; l++)
+			HH.insert(H1[l][l + sz - 1]);
+		for (ll l = 0; l + sz - 1 < H; l++)
+		{
+			if (HH.count(H2[l][l + sz - 1]))
+			{
+				if (check(l, l + sz - 1))
+				{
+					cout << sz << "\n";
+					return 0;
+				}
+			}
+		}
+	}
+	cout << "0\n";
+	return 0;
+}
