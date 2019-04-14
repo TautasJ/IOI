@@ -1,0 +1,174 @@
+/*input
+6 3 4
+1
+1 2
+1 3
+2 3
+2 3
+5 1
+1 2
+1 3
+2 3
+3 1
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+int in[200000 + 1];
+int out[200000 + 1];
+vector<int>adj[200000 + 1];
+vector<int>visi[200000 + 1];
+vector<int>visiX[200000 + 1];
+int H[200000 + 1];
+int pa[200000 + 1];
+vector<pair<int, int>>kiti[200000 + 1];
+int timer = 1;
+void dfs(int i)
+{
+	in[i] = out[i] = timer++;
+	for (int j : adj[i])
+	{
+		dfs(j);
+		out[i] = max(out[i], out[j]);
+	}
+}
+struct Fenwick
+{
+	vector<int>A;
+	int n;
+	Fenwick(int n = 1): n(n)
+	{
+		A = vector<int>(n + 1, 0);
+	}
+	inline int lsb(int x)
+	{
+		return ((x) & (-x));
+	}
+	void add(int i, int w)
+	{
+		for (; i <= n; i += lsb(i))
+		{
+			A[i] += w;
+		}
+	}
+	int get(int i)
+	{
+		i = min(i, n);
+		int ret = 0;
+		for (; i > 0; i -= lsb(i))
+		{
+			ret += A[i];
+		}
+		return ret;
+	}
+	int get(int a, int b)
+	{
+		return get(b) - get(a - 1);
+	}
+};
+int main()
+{
+	ios_base::sync_with_stdio(false), cin.tie(0), cout.tie(0), cerr.tie(0);
+	int N, R, Q;
+	cin >> N >> R >> Q;
+	pa[1] = 1;
+	for (int i = 1; i <= N; i++)
+	{
+		if (i != 1)
+		{
+			cin >> pa[i];
+			adj[pa[i]].push_back(i);
+		}
+		cin >> H[i];
+		visi[H[i]].push_back(i);
+	}
+	dfs(1);
+	for (int i = 1; i <= N; i++)
+	{
+		kiti[H[i]].push_back({in[i] - 1, -1});
+		kiti[H[i]].push_back({out[i], 1});
+		visiX[H[i]].push_back(in[i]);
+	}
+	for (int i = 1; i <= R; i++)
+	{
+		sort(visiX[i].begin(), visiX[i].end());
+		sort(kiti[i].begin(), kiti[i].end());
+	}
+	map<pair<int, int>, int>X;
+	int mxsz = 480;
+	for (int i = 1; i <= R; i++)
+	{
+		if (visi[i].size() >= mxsz)
+		{
+			int suma[N + 5];
+			fill_n(suma, N + 5, 0);
+			for (int e1 : visi[i])
+			{
+				suma[in[e1]]++;
+				suma[out[e1] + 1]--;
+			}
+			for (int i = 1; i < N + 5; i++)
+				suma[i] += suma[i - 1];
+
+			for (int j = 1; j <= R; j++)
+			{
+				if (j == i)
+					continue;
+				int ans = 0;
+				for (int e2 : visi[j])
+					ans += suma[in[e2]];
+				X[ {i, j}] = ans;
+			}
+		}
+	}
+	for (int i = 1; i <= R; i++)
+	{
+		if (visi[i].size() >= mxsz)
+		{
+			int suma[N + 5];
+			fill_n(suma, N + 5, 0);
+			for (int e2 : visi[i])
+				suma[in[e2]]++;
+			for (int i = 1; i < N + 5; i++)
+				suma[i] += suma[i - 1];
+			for (int j = 1; j <= R; j++)
+			{
+				int ans = 0;
+				for (int e1 : visi[j])
+				{
+					ans += suma[out[e1]];
+					ans -= suma[in[e1] - 1];
+				}
+				X[ {j, i}] = ans;
+			}
+		}
+	}
+	Fenwick IN(N + 5);
+	while (Q--)
+	{
+		int r1, r2;
+		cin >> r1 >> r2;
+		if (X.count({r1, r2}))
+		{
+			cout << X[ {r1, r2}] << "\n" << flush;
+			continue;
+		}
+		int ans = 0;
+		auto it = visiX[r2].begin();
+		for (pair<int, int>x : kiti[r1])
+		{
+			while (it != visiX[r2].end() && (*it) <= x.first)
+				it++;
+			ans += x.second * int(it - visiX[r2].begin());
+		}
+
+
+
+		X[ {r1, r2}] = ans;
+		cout << ans << "\n" << flush;
+		continue;
+	}
+
+
+}
