@@ -1,0 +1,54 @@
+/*input
+1
+255
+*/
+#include <bits/stdc++.h>
+using namespace std;
+int main()
+{
+	int K;
+	cin >> K;
+	cout << "FILE reverse " << K << endl;
+	int N;
+	cin >> N;
+	int A[10];
+	for (int i = 1; i <= 9; i++)
+	{
+		A[i] = (N / 8 + 1) * (i - 1);
+	}
+	A[9] = N;
+	for (int i = 1; i <= 9; i++)
+		cout << A[i] << " ";
+	cout << endl;
+	for (int k = N; k >= 0; k--)
+	{
+X:;
+		bool ok = false;
+		for (int i = 9; i >= 1; i--)
+		{
+			if (A[i] == k)
+			{
+				cout << "P " << i << endl;
+				ok = true;
+				break;
+			}
+		}
+		if (ok)
+			continue;
+		for (int i = 9; i >= 1; i--)
+		{
+			if (A[i] + 1 <= k)
+			{
+				for (int j = 1; j <= 9; j++)
+				{
+					if (A[j] > k || j == 9)
+					{
+						A[j] = A[i] + 1;
+						cout << "S " << i << " " << j << endl;
+						goto X;
+					}
+				}
+			}
+		}
+	}
+}
