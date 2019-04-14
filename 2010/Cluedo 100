@@ -1,0 +1,30 @@
+#include "grader.h"
+#include "cluedo.h"
+#include <bits/stdc++.h>
+using namespace std;
+void Solve()
+{
+	set<int>g1 = {1, 2, 3, 4, 5, 6};
+	set<int>g2 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+	set<int>g3 = {1, 2, 3, 4, 5, 6};
+	while (g1.size() + g2.size() + g3.size() > 3)
+	{
+		int a = *begin(g1);
+		int b = *begin(g2);
+		int c = *begin(g3);
+		int k = Theory(a, b, c);
+		if (k == 0)
+			return;
+		if (k == 1)
+			g1.erase(a);
+		if (k == 2)
+			g2.erase(b);
+		if (k == 3)
+			g3.erase(c);
+	}
+	Theory(*begin(g1), *begin(g2), *begin(g3));
+}/*
+int main()
+{
+
+}/**/
