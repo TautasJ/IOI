@@ -1,0 +1,63 @@
+/*input
+2 4
+5
+2
+100
+500
+1000
+2000
+3
+1
+2
+4
+-1
+-3
+-2
+-4
+
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+int main()
+{
+	ios_base::sync_with_stdio(false), cin.tie(0), cout.tie(0), cerr.tie(0);
+	ll N, M;
+	cin >> N >> M;
+	ll R[N + 1];
+	for (ll i = 1; i <= N; i++)
+		cin >> R[i];
+	ll W[M + 1];
+	for (ll i = 1; i <= M; i++)
+		cin >> W[i];
+	ll Kur[M + 1];
+	set<ll>galim;
+	for (ll i = 1; i <= N; i++)
+		galim.insert(i);
+	queue<ll>Q;
+	ll ans = 0;
+	for (ll i = 0; i < 2 * M; i++)
+	{
+		ll x;
+		cin >> x;
+		if (x > 0)
+		{
+			Q.push(x);
+		}
+		else
+		{
+			galim.insert(Kur[-x]);
+		}
+		while (!Q.empty() && !galim.empty())
+		{
+			ll a = *(galim.begin());
+			galim.erase(a);
+			ll b = Q.front();
+			Q.pop();
+			Kur[b] = a;
+			ans += W[b] * R[a];
+		}
+	}
+	cout << ans << "\n";
+}
