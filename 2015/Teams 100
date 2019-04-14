@@ -1,0 +1,197 @@
+/*input
+4
+2 4
+1 2
+2 3
+2 3
+2
+2 1 3
+2 1 1
+*/
+#include "teams.h"
+#include <bits/stdc++.h>
+using namespace std;
+struct ST
+{
+	int a, b;
+	ST * left;
+	ST * right;
+	int suma;
+	ST()
+	{
+
+	}
+	ST(int a, int b, int suma, ST*left, ST*right): a(a), b(b), suma(suma), left(left), right(right)
+	{
+
+	}
+	ST(int a, int b): a(a), b(b), suma(0)
+	{
+		if (a < b)
+		{
+			int x = 1;
+			while (2 * x < (b - a + 1))
+				x *= 2;
+			left = new ST(a, a + x - 1);
+			right = new ST(a + x, b);
+		}
+	}
+	ST* add(int x)
+	{
+		if (a <= x && x <= b)
+		{
+			if (a == b)
+			{
+				return new ST(a, b, suma + 1, NULL, NULL);
+			}
+			ST *L = left->add(x);
+			ST *R = right->add(x);
+			return new ST(a, b, L->suma + R->suma, L, R);
+		}
+		else
+			return this;
+	}
+	int sum(int l, int r)
+	{
+		if (l <= a && b <= r)
+			return suma;
+		if (r < a || b < l)
+			return 0;
+		return left->sum(l, r) + right->sum(l, r);
+	}
+};
+int n;
+vector<pair<int, int>>x;
+ST* MEDIS[500001];
+vector<int>xxx[500001];
+void init(int N, int A[], int B[])
+{
+	for (int i = 0; i < N; i++)
+		xxx[A[i]].push_back(B[i]);
+	MEDIS[0] = new ST(0, 500001);
+	for (int a = 1; a < 500001; a++)
+	{
+		MEDIS[a] = MEDIS[a - 1];
+		for (int b : xxx[a])
+			MEDIS[a] = MEDIS[a]->add(b);
+	}
+
+	n = N;
+	for (int i = 0; i < n; i++)
+	{
+		x.push_back({A[i], B[i]});
+	}
+	sort(x.begin(), x.end(),
+	     [](pair<int, int>a, pair<int, int>b)
+	{
+		if (a.second != b.second)
+			return a.second < b.second;
+		return a.first > b.first;
+	}
+	    );
+}
+int kiekis(int a1, int a2, int b1, int b2)
+{
+	a1 = max(a1, 1);
+	b1 = max(b1, 1);
+	a2 = min(a2, n);
+	b2 = min(b2, n);
+	if (a1 > a2 || b1 > b2 || a1 > b2)
+		return 0;
+	return MEDIS[a2]->sum(b1, b2) - MEDIS[a1 - 1]->sum(b1, b2);
+}
+int can(int M, int K[])
+{
+	int suma = 0;
+	for (int i = 0; i < M; i++)
+		suma += K[i];
+	if (suma > n)
+		return 0;
+	sort(K, K + M);
+	if (M < 375)
+	{
+		vector<pair<int, pair<int, int>>>xx;
+		vector<int>KK = {0};
+		for (int i = 0; i < M; i++)
+		{
+			if (i == 0 || K[i] != K[i - 1])
+				KK.push_back(K[i]);
+		}
+		KK.push_back(n + 1);
+		for (int b = 0; b + 1 < KK.size(); b++)
+		{
+			for (int a = ((int)KK.size()) - 2; a >= 0; a--)
+			{
+				int c = kiekis(KK[a] + 1, KK[a + 1], KK[b], KK[b + 1] - 1);
+				if (c > 0)
+				{
+					xx.push_back({c, {KK[a + 1], KK[b]}});
+				}
+			}
+		}
+		for (int id = 0; id < M; id++)
+		{
+			int k = K[id];
+			int kiek = 0;
+			for (int id1 = 0; id1 < xx.size(); id1++)
+			{
+				int c = min(xx[id1].first, K[id]);
+				if (xx[id1].second.first <= k && k <= xx[id1].second.second)
+				{
+					K[id] -= c;
+					xx[id1].first -= c;
+				}
+				if (K[id] <= 0)
+				{
+					break;
+				}
+			}
+			if (K[id] > 0)
+			{
+				return 0;
+			}
+		}
+		return 1;
+	}
+	set<pair<int, int>>KKK;
+	for (int i = 0; i < M; i++)
+	{
+		KKK.insert({K[i], i});
+	}
+	for (pair<int, int>i : x)
+	{
+		auto it = KKK.lower_bound({i.first, -212});
+		if (it != KKK.end() && it->first <= i.second)
+		{
+			int &c = K[it->second];
+			c--;
+			if (c == 0)
+				KKK.erase(it);
+		}
+	}
+	return KKK.size() == 0;
+}
+/*
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	int n;
+	cin >> n;
+	int A[n], B[n];
+	for (int i = 0; i < n; i++)
+	{
+		cin >> A[i] >> B[i];
+	}
+	init(n, A, B);
+	int m;
+	cin >> m;
+	while (m--)
+	{
+		int kiek;
+		cin >> kiek;
+		int K[kiek];
+		for (int &i : K)
+			cin >> i;
+		cout << can(kiek, K) << "\n";
+	}
+}/**/
