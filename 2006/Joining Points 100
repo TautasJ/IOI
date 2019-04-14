@@ -1,0 +1,146 @@
+/*input
+6
+0 1000
+1000 1000
+203 601
+449 212
+620 837
+708 537
+8
+0 0
+1000 0
+185 300
+314 888
+416 458
+614 622
+683 95
+838 400
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+struct point
+{
+	ll x, y;
+	int i;
+	point()
+	{
+
+	}
+	point(ll x, ll y): x(x), y(y)
+	{
+
+	}
+};
+point operator-(point a, point b)
+{
+	return point(a.x - b.x, a.y - b.y);
+}
+ll cross(point a, point b)
+{
+	return (a.x * b.y - a.y * b.x);
+}
+ll plotas(point a, point b, point c)
+{
+	return abs(cross(a - b, a - c));
+}
+bool viduje(point a, point b, point c, point d)
+{
+	if (plotas(a, b, d) == 0 || plotas(b, c, d) == 0 || plotas(c, a, d) == 0)
+		return false;
+	return ((plotas(a, b, d) + plotas(b, c, d) + plotas(c, a, d)) == plotas(a, b, c));
+}
+void solve(vector<point> &A, vector<point> &B, char a, char b, point a1, point a2, point b1)
+{
+	if (A.empty() || B.empty())
+	{
+		for (point i : A)
+			cout << i.i << " " << a1.i << " " << a << "\n";
+		for (point i : B)
+			cout << i.i << " " << b1.i << " " << b << "\n";
+		return;
+	}
+	auto it = B.begin() + (rand() % (B.size()));
+	point b2 = *it;
+	B.erase(it);
+	cout << b1.i << " " << b2.i << " " << b << "\n";
+	{
+		vector<point>A1;
+		vector<point>B1;
+		for (point i : A)
+			if (viduje(a1, a2, b2, i))
+				A1.push_back(i);
+		for (point i : B)
+			if (viduje(a1, a2, b2, i))
+				B1.push_back(i);
+		solve(A1, B1, a, b, a1, a2, b2);
+	}
+	{
+		vector<point>A1;
+		vector<point>B1;
+		for (point i : A)
+			if (viduje(b1, b2, a1, i))
+				A1.push_back(i);
+		for (point i : B)
+			if (viduje(b1, b2, a1, i))
+				B1.push_back(i);
+		solve(B1, A1, b, a, b1, b2, a1);
+	}
+	{
+		vector<point>A1;
+		vector<point>B1;
+		for (point i : A)
+			if (viduje(b1, b2, a2, i))
+				A1.push_back(i);
+		for (point i : B)
+			if (viduje(b1, b2, a2, i))
+				B1.push_back(i);
+		solve(B1, A1, b, a, b1, b2, a2);
+	}
+}
+int main()
+{
+	srand(90);
+	ios_base::sync_with_stdio(false), cin.tie(NULL), cout.tie(NULL);
+	int g;
+	cin >> g;
+	vector<point>G(g);
+	for (int i = 0; i < g; i++)
+	{
+		cin >> G[i].x >> G[i].y;
+		G[i].i = i + 1;
+	}
+	int r;
+	cin >> r;
+	vector<point>R(r);
+	for (int i = 0; i < r; i++)
+	{
+		cin >> R[i].x >> R[i].y;
+		R[i].i = i + 1;
+	}
+	{
+		vector<point>G1;
+		vector<point>R1;
+		for (point i : G)
+			if (viduje(G[0], G[1], R[0], i))
+				G1.push_back(i);
+		for (point i : R)
+			if (viduje(G[0], G[1], R[0], i))
+				R1.push_back(i);
+		cout << G[0].i << " " << G[1].i << " g\n";
+		solve(G1, R1, 'g', 'r', G[0], G[1], R[0]);
+	}
+	{
+		vector<point>G1;
+		vector<point>R1;
+		for (point i : G)
+			if (viduje(R[0], R[1], G[1], i))
+				G1.push_back(i);
+		for (point i : R)
+			if (viduje(R[0], R[1], G[1], i))
+				R1.push_back(i);
+		cout << R[0].i << " " << R[1].i << " r\n";
+		solve(R1, G1, 'r', 'g', R[0], R[1], G[1]);
+	}
+}
