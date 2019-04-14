@@ -1,0 +1,103 @@
+/*input
+6
+3 2
+5 3
+4 1
+2 1
+4 3
+3 2
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+struct ST
+{
+	int l, r;
+	ST* left;
+	ST* right;
+	ll lazy = 0;
+	pair<ll, ll>mx;
+	ST(int l, int r): l(l), r(r)
+	{
+		if (l < r)
+		{
+			left = new ST(l, (l + r) / 2);
+			right = new ST((l + r) / 2 + 1, r);
+		}
+		mx = {0, r};
+	}
+	void fix()
+	{
+		mx.first += lazy;
+		if (l < r)
+		{
+			left->lazy += lazy;
+			right->lazy += lazy;
+		}
+		lazy = 0;
+	}
+	void add(int a, int b, ll w)
+	{
+		if (a <= l && r <= b)
+		{
+			lazy += w;
+			return fix();
+		}
+		fix();
+		if (r < a || b < l)
+			return;
+		left->add(a, b, w);
+		right->add(a, b, w);
+		mx = max(left->mx, right->mx);
+	}
+	pair<ll, ll>MX(int a, int b)
+	{
+		fix();
+		if (a <= l && r <= b)
+			return mx;
+		if (r < a || b < l)
+			return { -1ll, -1ll};
+		return max(left->MX(a, b), right->MX(a, b));
+	}
+} medis(0, 101010);
+int main()
+{
+	ll n;
+	cin >> n;
+	while (n--)
+	{
+		ll k, h;
+		cin >> h >> k;
+		medis.add(h - k, h - 1, 1);
+	}
+	for (ll i = 100001; i >= 0; i--)
+	{
+		while (true)
+		{
+			auto jj = medis.MX(i + 1, 100000);
+			if (medis.MX(i, i).first < jj.first)
+			{
+				int j = jj.second;
+				if (j > i + 1)
+				{
+					int k = min(jj.first - medis.MX(i, i).first, j - i - 1);
+					medis.add(j - k + 1, j, -1);
+					medis.add(i, i, k);
+					continue;
+				}
+				medis.add(j, j, -1);
+				medis.add(i, i, 1);
+			}
+			else
+				break;
+		}
+	}
+	ll ans = 0;
+	for (ll i = 0; i < 101010; i++)
+	{
+		ll c = medis.MX(i, i).first;
+		ans += c * (c - 1) / 2;
+	}
+	cout << ans << "\n";
+}
