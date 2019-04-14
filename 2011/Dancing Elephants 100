@@ -1,0 +1,147 @@
+#include "grader.h"
+#include <bits/stdc++.h>
+using namespace std;
+const int MAX_N = 150000;
+map<int, int>K;
+int pos[MAX_N];
+int L;
+int ans = 0;
+vector<vector<int>>X;
+vector<vector<int>>kaina;
+vector<vector<int>>x_;
+int atsakymas(int i = 0, int x = -L - 100)
+{
+	if (i >= X.size())
+		return 0;
+	if (X[i].empty() || X[i].back() <= x)
+		return atsakymas(i + 1, x);
+	int j = upper_bound(X[i].begin(), X[i].end(), x) - X[i].begin();
+	return kaina[i][j] + atsakymas(i + 1, x_[i][j]);
+}
+void perskaiciuok(int i)
+{
+	if (X[i].empty())
+	{
+		X.erase(X.begin() + i);
+		kaina.erase(kaina.begin() + i);
+		x_.erase(x_.begin() + i);
+		return;
+	}
+	if (X[i].size() >= 400)
+	{
+		vector<int>naujas;
+		X.insert(X.begin() + i + 1, naujas);
+		kaina.insert(kaina.begin() + i + 1, naujas);
+		x_.insert(x_.begin() + i + 1, naujas);
+		int nuo = X[i].size() / 2;
+		for (int j = nuo; j < X[i].size(); j++)
+		{
+			X[i + 1].push_back(X[i][j]);
+		}
+		kaina[i + 1] = x_[i + 1] = X[i + 1];
+		while (X[i].size() >= nuo + 1)
+		{
+			X[i].pop_back();
+			x_[i].pop_back();
+			kaina[i].pop_back();
+		}
+		perskaiciuok(i);
+		perskaiciuok(i + 1);
+		return;
+	}
+	int k = X[i].size() - 1;
+	for (int j = X[i].size() - 1; j >= 0; j--)
+	{
+		if (X[i].back() <= X[i][j] + L)
+		{
+			kaina[i][j] = 1;
+			x_[i][j] = X[i][j] + L;
+			continue;
+		}
+		while (k >= 1 && X[i][k - 1] > X[i][j] + L)
+			k--;
+		kaina[i][j] = kaina[i][k] + 1;
+		x_[i][j] = x_[i][k];
+	}
+}
+void isimam(int x)
+{
+	int lo = 0;
+	int hi = X.size() - 1;
+	while (lo <= hi)
+	{
+		int i = (lo + hi) / 2;
+		if (X[i][0] <= x && x <= X[i].back())
+		{
+			X[i].erase(lower_bound(X[i].begin(), X[i].end(), x));
+			kaina[i].pop_back();
+			x_[i].pop_back();
+			return perskaiciuok(i);
+		}
+		if (x >= X[i].back())
+			lo = i + 1;
+		else
+			hi = i - 1;
+	}
+}
+void pridedam(int x)
+{
+	if (X.empty())
+	{
+		X.push_back({x});
+		x_.push_back({x + L});
+		kaina.push_back({1});
+		return;
+	}
+	int lo = 0;
+	int hi = X.size() - 1;
+	while (lo < hi)
+	{
+		int i = (lo + hi) / 2;
+		if (X[i].back() > x)
+			hi = i;
+		else
+			lo = i + 1;
+	}
+	int i = (lo + hi) / 2;
+	if (X[i].back() <= x)
+		i = X.size() - 1;
+	X[i].insert(upper_bound(X[i].begin(), X[i].end(), x), x);
+	kaina[i].push_back(0);
+	x_[i].push_back(0);
+	return perskaiciuok(i);
+}
+int update(int id, int nv)
+{
+	K[pos[id]]--;
+	if (K[pos[id]] == 0)
+		isimam(pos[id]);
+	pos[id] = nv;
+	if (K[pos[id]] == 0)
+		pridedam(pos[id]);
+	K[pos[id]]++;
+	return atsakymas();
+}
+void init(int n, int l, int x[])
+{
+	L = l;
+	L = l;
+	for (int i = 0; i < n; i++)
+	{
+		if (K[x[i]] == 0)
+			pridedam(x[i]);
+		K[x[i]]++;
+		pos[i] = x[i];
+	}
+}
+/*
+int main()
+{
+	int x[] = {10, 15, 17, 20};
+	init(4, 10, x);
+	cout << update(2, 16) << endl;
+	cout << update(1, 25)  << endl;
+	cout << update(3, 35) << endl;
+	cout << update(0, 38) << endl;
+	cout << update(2, 0) << endl;
+}/**/
