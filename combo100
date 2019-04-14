@@ -1,0 +1,76 @@
+#include "combo.h"
+#include <bits/stdc++.h>
+using namespace std;
+std::string guess_sequence(int N)
+{
+	string ans;
+	if (press("AB") > 0)
+	{
+		if (press("A") > 0)
+		{
+			ans = "A";
+		}
+		else
+		{
+			ans = "B";
+		}
+	}
+	else
+	{
+		if (press("X") > 0)
+		{
+			ans = "X";
+		}
+		else
+		{
+			ans = "Y";
+		}
+	}
+	string CHARS;
+	for (char i : "ABXY")
+	{
+		if (i != ans.back())
+			CHARS.push_back(i);
+	}
+	while (ans.size() + 1 < N)
+	{
+		string x;
+		x += ans;
+		x.push_back(CHARS[0]);
+		x += ans;
+		x.push_back(CHARS[1]);
+		x.push_back(CHARS[0]);
+		x += ans;
+		x.push_back(CHARS[1]);
+		x.push_back(CHARS[1]);
+		x += ans;
+		x.push_back(CHARS[1]);
+		x.push_back(CHARS[2]);
+		int c = press(x);
+		if (c == ans.size())
+		{
+			ans.push_back(CHARS[2]);
+		}
+		else if (c == ans.size() + 1)
+		{
+			ans.push_back(CHARS[0]);
+		}
+		else
+		{
+			ans.push_back(CHARS[1]);
+		}
+	}
+	while (ans.size() < N)
+	{
+		int t = 2;
+		for (int c : {0, 1})
+		{
+			string x = ans;
+			x.push_back(CHARS[c]);
+			if (press(x) > ans.size())
+				t = c;
+		}
+		ans.push_back(CHARS[t]);
+	}
+	return ans;
+}
