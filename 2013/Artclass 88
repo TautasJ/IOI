@@ -1,0 +1,65 @@
+#include <bits/stdc++.h>
+#include "grader.h"
+using namespace std;
+typedef long double ld;
+int C[500][500];
+ld res(int H, int W,
+       int R[500][500], int G[500][500], int B[500][500])
+{
+	for (int i = 0; i < H; i++)
+	{
+		for (int j = 0; j < W; j++)
+		{
+			C[i][j] = R[i][j] + G[i][j] + B[i][j];
+		}
+	}
+	ld res = 0;
+	for (int i = 0; i + 1 < H; i++)
+	{
+		for (int j = 0; j + 1 < W; j++)
+		{
+			for (ld diff : {abs(C[i][j] - C[i + 1][j]), abs(C[i][j] - C[i][j + 1])})
+				res += pow(diff, 0.9);
+		}
+	}
+	return res;
+}
+int style(int H, int W,
+          int R[500][500], int G[500][500], int B[500][500])
+{
+	ld score = res(H, W, R, G, B);
+	ld A[5] = {0, 4192188.218, 8968854.011, 16078112.030, 1549220.946};
+	pair<ld, int>best = {1e100, 1e100};
+	for (int i = 1; i <= 4; i++)
+		best = min(best, {abs(score - A[i]), i});
+	return best.second;
+}
+/*
+int R[500][500], G[500][500], B[500][500];
+int main()
+{
+	for (string s : {"sample1", "sample2", "sample3", "sample4"})
+	{
+		vector<ld>V;
+		for (string c : {"01", "02", "03", "04", "05", "06", "07", "08", "09"})
+		{
+			ifstream cin(s + "\\" + c);
+			int N, M;
+			cin >> N >> M;
+			for (int j = 0; j < M; j++)
+			{
+				for (int i = 0; i < N; i++)
+				{
+					cin >> R[i][j] >> G[i][j] >> B[i][j];
+				}
+			}
+			V.push_back(res(N, M, R, G, B));
+			cout << style(N, M, R, G, B) << "\n";
+		}
+		ld sum = 0;
+		for (ld i : V)
+			sum += i;
+		sum /= ld(V.size());
+		cout << fixed << setprecision(3) << sum << endl;
+	}
+}/**/
