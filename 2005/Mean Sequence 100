@@ -1,0 +1,40 @@
+/*input
+3
+2
+5
+9
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	int n;
+	cin >> n;
+	ll l = -1e9;
+	ll r = 1e9;
+	while (n--)
+	{
+		if (l > r)
+		{
+			cout << "0\n";
+			return 0;
+		}
+		ll m;
+		cin >> m;
+		m *= 2;
+		ll x = m - r;
+		ll y = m - l;
+		l = x;
+		r = y;
+		l = max(l, m / 2);
+	}
+	if (l > r)
+	{
+		cout << "0\n";
+		return 0;
+	}
+	cout << r - l + 1 << "\n";
+}
