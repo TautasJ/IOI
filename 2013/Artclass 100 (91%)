@@ -6,29 +6,29 @@ int C[500][500];
 ld res(int H, int W,
        int R[500][500], int G[500][500], int B[500][500])
 {
-	for (int i = 0; i < H; i++)
-	{
-		for (int j = 0; j < W; j++)
-		{
-			C[i][j] = R[i][j] + G[i][j] + B[i][j];
-		}
-	}
 	ld res = 0;
+	ld kiek = 1;
 	for (int i = 0; i + 1 < H; i++)
 	{
 		for (int j = 0; j + 1 < W; j++)
 		{
-			for (ld diff : {abs(C[i][j] - C[i + 1][j]), abs(C[i][j] - C[i][j + 1])})
+			for (ld diff : {
+			            abs(R[i][j] - R[i + 1][j]), abs(R[i][j] - R[i][j + 1]),
+			            abs(G[i][j] - G[i + 1][j]) * 2, abs(G[i][j] - G[i][j + 1]) * 2,
+			            abs(B[i][j] - B[i + 1][j]), abs(B[i][j] - B[i][j + 1])
+			        })
 				res += pow(diff, 0.9);
+			kiek++;
 		}
 	}
+	res /= kiek;
 	return res;
 }
 int style(int H, int W,
           int R[500][500], int G[500][500], int B[500][500])
 {
 	ld score = res(H, W, R, G, B);
-	ld A[5] = {0, 4192188.218, 8968854.011, 16078112.030, 1549220.946};
+	ld A[5] = {0, 28.532, 64.147, 144.625, 14.080};
 	pair<ld, int>best = {1e100, 1e100};
 	for (int i = 1; i <= 4; i++)
 		best = min(best, {abs(score - A[i]), i});
@@ -54,7 +54,7 @@ int main()
 				}
 			}
 			V.push_back(res(N, M, R, G, B));
-			cout << style(N, M, R, G, B) << "\n";
+			cout << style(N, M, R, G, B) << endl;
 		}
 		ld sum = 0;
 		for (ld i : V)
