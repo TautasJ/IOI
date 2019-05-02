@@ -1,0 +1,112 @@
+/*input
+
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+ld xx(pair<ll, ll>a, pair<ll, ll> b)
+{
+	return ld(b.second - a.second) / ld(a.first - b.first);
+}
+struct CHT
+{
+	vector<pair<ll, pair<ll, ll>>>a;
+	//kx + b
+	// k mazeja
+	void add(ll k, ll b, ll kiek)
+	{
+		while (a.size() >= 2 && xx(a.back().second, a[a.size() - 2].second)
+		        > xx(a.back().second, {k, b}))
+			a.pop_back();
+		a.push_back({kiek, {k, b}});
+	}
+	int id = 0;
+	// x dideja
+	pair<ll, ll> get(ll x)
+	{
+		id = min(id, (int)a.size() - 1);
+		while (id + 1 < a.size() &&
+		        a[id + 1].second.first * x + a[id + 1].second.second <=
+		        a[id].second.first * x + a[id].second.second)
+			id++;
+		pair<ll, ll>mn = {a[id].second.first * x + a[id].second.second, a[id].first};
+		for (int i = max(0, id - 3); i <= id + 3 && i < a.size(); i++)
+			mn = min(mn, {a[i].second.first * x + a[i].second.second, a[i].first});
+		return mn;
+	}
+};
+ll take_photos(int n, int m, int k, vector<int> r, vector<int> c)
+{
+	for (int i = 0; i < n; i++)
+	{
+		if (r[i] < c[i])
+			swap(r[i], c[i]);
+	}
+	vector<pair<int, int>>b;
+	for (int i = 0; i < n; i++)
+		b.push_back({c[i], r[i]});
+	sort(b.begin(), b.end(), [](pair<int, int>a, pair<int, int>b)
+	{
+		if (a.first == b.first)
+			return a.second > b.second;
+		return a.first < b.first;
+	});
+	vector<pair<ll, ll>>a;
+	a.push_back({ -1, -1});
+	int R = -1;
+	for (pair<int, int>i : b)
+	{
+		if (i.second > R)
+		{
+			a.push_back(i);
+			R = i.second;
+		}
+	}
+	int N = a.size();
+	a.push_back({m + 2, m + 2});
+	for (int i = 0; i < N; i++)
+		a[i].first--;
+	ll CC[N];
+	for (int j = 0; j < N; j++)
+		CC[j] = a[j + 1].first * a[j + 1].first
+		        - max(0ll, a[j].second - a[j + 1].first) *
+		        max(0ll, a[j].second - a[j + 1].first);
+	auto check = [&](ll C)->pair<ll, ll>
+	{
+		pair<ll, ll>DP[N];
+		DP[0] = {0, 0};
+		CHT AAA;
+		for (int i = 1; i < N; i++)
+		{
+			AAA.add(-2 * a[i].first, CC[i - 1] + DP[i - 1].first, DP[i - 1].second);
+			DP[i] = AAA.get(a[i].second);
+			DP[i].first += a[i].second * a[i].second + C;
+			DP[i].second++;
+		}
+		DP[N - 1].first -= DP[N - 1].second * C;
+		return DP[N - 1];
+	};
+	ll lo = 0; //n
+	ll hi = 5e13; //1
+	while (lo < hi)
+	{
+		ll C = (lo + hi + 1) / 2;
+		if (check(C).second >= k)
+			lo = C;
+		else
+			hi = C - 1;
+	}
+	ll C = (lo + hi) / 2;
+	pair<ll, ll>V1 = check(C);
+	pair<ll, ll>V2 = check(C + 1);
+	if (V2.second == k || V2.second == V1.second)
+		return V2.first;
+	return V1.first + (k - V1.second) * (V2.first - V1.first)
+	       / (V2.second - V1.second);
+}
+/*
+int main()
+{
+	cout << take_photos(2, 10, 1, {1, 4}, {1, 4}) << endl;
+}/**/
