@@ -1,0 +1,95 @@
+/*input
+7
+3 8
+7 2
+4 2
+1 4
+1 9
+3 4
+2 3
+*/
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+ll ans(vector<pair<ll, ll>> &A)
+{
+	ll n = A.size() / 2;
+	ll mx = 0;
+	ll S[2 * n];
+	S[0] = 0;
+	for (int i = 1; i < 2 * n; i++)
+		S[i] = S[i - 1] + A[i - 1].second;
+	deque<int>Q;
+	for (int j = 0; j < 2 * n; j++)
+	{
+		while (!Q.empty() && Q.front() <= j - n)
+			Q.pop_front();
+		if (!Q.empty())
+		{
+			int i = Q[0];
+			mx = max(mx, S[j] + A[j].first + (A[i].first - S[i]));
+		}
+		while (!Q.empty() && A[Q.back()].first - S[Q.back()] < A[j].first - S[j])
+			Q.pop_back();
+		Q.push_back(j);
+	}
+	return mx;
+}
+int main()
+{
+	ios_base::sync_with_stdio(false);
+	ll N;
+	cin >> N;
+	ll pa[N + 1];
+	ll L[N + 1];
+	ll K[N + 1];
+	fill_n(K, N + 1, 0ll);
+	ll H[N + 1];
+	fill_n(H, N + 1, 0ll);
+	ll MX[N + 1];
+	fill_n(MX, N + 1, 0ll);
+	for (ll i = 1; i <= N; i++)
+	{
+		cin >> pa[i] >> L[i];
+		K[pa[i]]++;
+	}
+	for (ll i = 1; i <= N; i++)
+	{
+		if (pa[i] != 0)
+		{
+			ll j = i;
+			while (K[j] == 0)
+			{
+				ll k = pa[j];
+				MX[k] = max({MX[j], MX[k], H[k] + H[j] + L[j]});
+				H[k] = max(H[k], H[j] + L[j]);
+				K[k]--;
+				pa[j] = 0;
+				j = k;
+			}
+		}
+	}
+	ll ret = 0;
+	for (ll i = 1; i <= N; i++)
+	{
+		if (pa[i] != 0)
+		{
+			ll gal = 0;
+			vector<pair<ll, ll>>A;
+			ll j = i;
+			while (pa[j] != 0)
+			{
+				gal = max(gal, MX[j]);
+				A.push_back({H[j], L[j]});
+				ll k = pa[j];
+				pa[j] = 0;
+				j = k;
+			}
+			ll s = A.size();
+			for (ll j = 0; j < s; j++)
+				A.push_back(A[j]);
+			ret += max(gal, ans(A));
+		}
+	}
+	cout << ret << "\n";
+}
