@@ -1,0 +1,117 @@
+#include <bits/stdc++.h>
+#include "highway.h"
+using namespace std;
+typedef long long ll;
+void find_pair(int N, std::vector<int> U, std::vector<int> V, int A, int B)
+{
+	vector<int>adj[N];
+	int M = U.size();
+	if (N == M)
+		return answer(1, 3);
+	for (int i = 0; i < M; i++)
+	{
+		adj[U[i]].push_back(V[i]);
+		adj[V[i]].push_back(U[i]);
+	}
+	vector<int>tarp;
+	for (int i = 0; i < M; i++)
+		tarp.push_back(i);
+	vector<int>w(M, 1);
+	ll maxi = ask(w);
+	while (tarp.size() > 1)
+	{
+		vector<int>t1;
+		vector<int>t2;
+		for (int i = 0; i < tarp.size(); i++)
+		{
+			if (i < tarp.size() / 2)
+				t1.push_back(tarp[i]);
+			else
+				t2.push_back(tarp[i]);
+		}
+		fill_n(w.begin(), M, 1);
+		for (int i : t1)
+			w[i] = 0;
+		if (ask(w) < maxi)
+			tarp = t1;
+		else
+			tarp = t2;
+	}
+	assert(tarp.size() == 1);
+	int u = U[tarp[0]];
+	int v = V[tarp[0]];
+	int s = u;
+	int t = v;
+	for (pair<int, int>ab : {make_pair(u, v), make_pair(v, u)})
+	{
+		int a = ab.first;
+		int b = ab.second;
+		int d[N];
+		fill_n(d, N, N + 3);
+		d[a] = 0;
+		function<void(int, int)>dfs = [&](int i, int p)
+		{
+			for (int j : adj[i])
+			{
+				if (j == p || d[j] <= d[i])
+					continue;
+				d[j] = d[i] + 1;
+				dfs(j, i);
+			}
+		};
+		dfs(a, b);
+		int pa[N];
+		fill_n(pa, N, -1);
+		for (int i = 0; i < M; i++)
+		{
+			if (d[U[i]] > d[V[i]])
+				swap(U[i], V[i]);
+			if (d[V[i]] < N + 3)
+			{
+				pa[V[i]] = i;
+			}
+		}
+		fill_n(w.begin(), M, 1);
+		for (int i = 0; i < N; i++)
+		{
+			if (pa[i] != -1)
+			{
+				w[pa[i]] = 0;
+			}
+		}
+		int de = (maxi - ask(w)) / (ll(B - A));
+		vector<int>X;
+		for (int i = 0; i < N; i++)
+			if (d[i] == de)
+				X.push_back(i);
+		while (X.size() > 1)
+		{
+			vector<int>x1;
+			vector<int>x2;
+			for (int i = 0; i < X.size(); i++)
+			{
+				if (i < X.size() / 2)
+					x1.push_back(X[i]);
+				else
+					x2.push_back(X[i]);
+			}
+			fill_n(w.begin(), M, 1);
+			for (int i : x1)
+				w[pa[i]] = 0;
+			if (ask(w) < maxi)
+				X = x1;
+			else
+				X = x2;
+		}
+		if (a == u)
+			s = X[0];
+		else
+			t = X[0];
+	}
+	answer(s, t);
+}/*
+int main()
+{
+
+}
+/**/
