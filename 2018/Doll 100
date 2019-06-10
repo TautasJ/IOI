@@ -1,0 +1,93 @@
+#include "doll.h"
+#include <bits/stdc++.h>
+using namespace std;
+struct node
+{
+	node *l = NULL;
+	node *r = NULL;
+	int nr = -1000000;
+	node(int d)
+	{
+		if (d > 0)
+		{
+			l = new node(d - 1);
+			r = new node(d - 1);
+		}
+	}
+};
+void valom(node* x, int &kiek, node* root)
+{
+	if (x->l == NULL)
+	{
+		assert(kiek > 0);
+		kiek--;
+	}
+	else
+	{
+		valom(x->l, kiek, root);
+		if (kiek == 0)
+			x->r = root;
+		else
+			valom(x->r, kiek, root);
+	}
+}
+node* lankom(node* x)
+{
+	if (x->l == NULL)
+		return x;
+	swap(x->l, x->r);
+	return lankom(x->r);
+}
+void numeruok(node* x, int &timer, vector<pair<int, pair<int, int>>>&ans)
+{
+	if (x->nr >= 0)
+		return;
+	if (x->nr != -1000000)
+		return;
+	x->nr = timer;
+	timer--;
+	numeruok(x->l, timer, ans);
+	numeruok(x->r, timer, ans);
+	ans.push_back({x->nr, {x->l->nr, x->r->nr}});
+}/*
+void answer(vector<int>c, vector<int>x, vector<int>y)
+{
+	for (int i = 0; i < c.size(); i++)
+	{
+		cout << i << " -> " << c[i] << endl;
+	}
+	for (int i = 0; i < x.size(); i++)
+	{
+		cout << -i - 1 << " -> " << x[i] << " " << y[i] << endl;
+	}
+}/**/
+void create_circuit(int M, std::vector<int> A)
+{
+	int N = A.size();
+	A.push_back(0);
+	int sz = A.size();
+	while (sz != (sz & (-sz)))
+		sz++;
+	int d = __builtin_ctz(sz);
+	node root = node(d);
+	int x = A.size();
+	valom(&root, x, &root);
+	for (int i : A)
+		lankom(&root)->nr = i;
+	int timer = -1;
+	vector<pair<int, pair<int, int>>>ans;
+	numeruok(&root, timer, ans);
+	vector<int>X;
+	vector<int>Y;
+	sort(ans.begin(), ans.end(), greater<pair<int, pair<int, int>>>());
+	for (auto i : ans)
+	{
+		X.push_back(i.second.first);
+		Y.push_back(i.second.second);
+	}
+	answer(vector<int>(M + 1, -1), X, Y);
+}/*
+int main()
+{
+	create_circuit(4, vector<int> {1, 2, 1});
+}/**/
