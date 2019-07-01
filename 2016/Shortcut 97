@@ -1,0 +1,218 @@
+/*input
+9 30
+10 10 10 10 10 10 10 10
+20 0 30 0 0 40 0 40 0
+*/
+#pragma GCC optimize ("O3")
+#include <bits/stdc++.h>
+using namespace std;
+typedef long long ll;
+typedef long double ld;
+ll A[1000001];
+ll D[1000001];
+void reset()
+{
+	fill_n(A, 1000001, -1e18);
+}
+ll get(int i)
+{
+	ll ret = -1e18;
+	if (i != 0)
+	{
+		ret = max(ret, A[i]);
+		i -= (i & (-i));
+		if (i != 0)
+		{
+			ret = max(ret, A[i]);
+			i -= (i & (-i));
+			if (i != 0)
+			{
+				ret = max(ret, A[i]);
+				i -= (i & (-i));
+				if (i != 0)
+				{
+					ret = max(ret, A[i]);
+					i -= (i & (-i));
+					if (i != 0)
+					{
+						ret = max(ret, A[i]);
+						i -= (i & (-i));
+						if (i != 0)
+						{
+							ret = max(ret, A[i]);
+							i -= (i & (-i));
+							if (i != 0)
+							{
+								ret = max(ret, A[i]);
+								i -= (i & (-i));
+								if (i != 0)
+								{
+									ret = max(ret, A[i]);
+									i -= (i & (-i));
+									if (i != 0)
+									{
+										ret = max(ret, A[i]);
+										i -= (i & (-i));
+										if (i != 0)
+										{
+											ret = max(ret, A[i]);
+											i -= (i & (-i));
+											if (i != 0)
+											{
+												ret = max(ret, A[i]);
+												i -= (i & (-i));
+												if (i != 0)
+												{
+													ret = max(ret, A[i]);
+													i -= (i & (-i));
+													if (i != 0)
+													{
+														ret = max(ret, A[i]);
+														i -= (i & (-i));
+														if (i != 0)
+														{
+															ret = max(ret, A[i]);
+															i -= (i & (-i));
+															if (i != 0)
+															{
+																ret = max(ret, A[i]);
+																i -= (i & (-i));
+																if (i != 0)
+																{
+																	ret = max(ret, A[i]);
+																	i -= (i & (-i));
+																	if (i != 0)
+																	{
+																		ret = max(ret, A[i]);
+																		i -= (i & (-i));
+																		if (i != 0)
+																		{
+																			ret = max(ret, A[i]);
+																			i -= (i & (-i));
+																			if (i != 0)
+																			{
+																				ret = max(ret, A[i]);
+																				i -= (i & (-i));
+																				if (i != 0)
+																				{
+																					ret = max(ret, A[i]);
+																					i -= (i & (-i));
+																					if (i != 0)
+																					{
+																						ret = max(ret, A[i]);
+																						i -= (i & (-i));
+																					}
+																				}
+																			}
+																		}
+																	}
+																}
+															}
+														}
+													}
+												}
+											}
+										}
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return ret;
+}
+void add(int i, ll w)
+{
+	while (i < 1000001)
+	{
+		A[i] = max(A[i], w);
+		i += (i & (-i));
+	}
+}
+ll find_shortcut(int n, vector<int>l, vector<int>d, int c)
+{
+	D[0] = 0;
+	for (ll i = 1; i < n; i++)
+		D[i] = D[i - 1] + l[i - 1];
+	ll lo = 1;
+	ll hi = 1e17;
+	int x[n];
+	iota(x, x + n, 0);
+	sort(x, x + n, [&](int a, int b) {return d[a] - D[a] > d[b] - D[b];});
+	int y[n];
+	iota(y, y + n, 0);
+	sort(y, y + n, [&](int a, int b) {return d[a] + D[a] < d[b] + D[b];});
+	while (lo < hi)
+	{
+		ll X = (lo + hi) / 2;
+		ll a1 = -1e18;
+		ll a2 = -1e18;
+		ll a3 = -1e18;
+		ll a4 = -1e18;
+		pair<ll, ll>mxx = { -1e18, -1e18};
+		for (ll b = 1; b < n; b++)
+		{
+			mxx = max(mxx, {d[b - 1] - D[b - 1], b - 1});
+			ll a = mxx.second;
+			if (d[a] - D[a] > X - d[b] - D[b])
+			{
+				ll xx = D[a];
+				ll yy = D[b];
+				ll r = X - d[a] - d[b] - c;
+				a3 = max(a3, -r - xx + yy);
+				a4 = max(a4, -r - xx - yy);
+			}
+		}
+		int j = 0;
+		reset();
+		for (int b : y)
+		{
+			while (j < n && d[x[j]] - D[x[j]] > X - d[b] - D[b])
+			{
+				add(x[j] + 1, d[x[j]] + D[x[j]]);
+				j++;
+			}
+			ll dd = get(b);
+			a1 = max(a1, -X + dd + d[b] + c + D[b]);
+			a2 = max(a2, -X + dd + d[b] + c - D[b]);
+		}
+		bool ok = false;
+		j = 0;
+		for (ll i = 0; i < n; i++)
+		{
+			ll lo = max(a1 - D[i], a3 + D[i]);
+			ll hi = min(D[i] - a2, -a4 - D[i]);
+			if (lo > hi)
+				continue;
+			while (j - 1 >= 0 && D[j] > hi)
+				j--;
+			while (j + 1 < n && D[j] < lo)
+				j++;
+			if (lo <= D[j] && D[j] <= hi)
+			{
+				ok = true;
+				break;
+			}
+		}
+		if (ok)
+			hi = X;
+		else
+			lo = X + 1;
+	}
+	return lo;
+}/*
+int main()
+{
+	ll n, c;
+	cin >> n >> c;
+	vector<int>l(n - 1);
+	vector<int>d(n);
+	for (int &i : l)
+		cin >> i;
+	for (int &i : d)
+		cin >> i;
+	cout << find_shortcut(n, l, d, c) << "\n";
+}/**/
